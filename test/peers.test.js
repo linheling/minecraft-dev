@@ -6,51 +6,79 @@ import { fileURLToPath } from 'node:url'
 /**
  * The dsh compatibility contract.
  *
- * Two dsh lines are supported at once: 0.1.5-rc.x (the runtime this plugin was
- * first built against, and the launcher's current line) and 0.1.7-rc.x, whose
- * preset model the plugin adapts to at runtime. The peer ranges must say so
- * explicitly, because node-semver's prerelease rule means `^0.1.5-rc.1` alone
- * does NOT match `0.1.7-rc.1` — a prerelease only satisfies a range that names
- * a prerelease on the same major.minor.patch. Widening to a bare `>=0.1.5-rc.1
- * <0.2.0` would not help either; the only portable form is an enumeration.
+ * Three dsh lines are supported at once: 0.1.5-rc.x (directory presets),
+ * 0.1.7-rc.x (agentPresets declarations) and 0.2.0-rc.x. The peer ranges must
+ * name every one of them, because node-semver cannot express "any prerelease of
+ * these lines" portably: `^0.1.5-rc.1` does NOT match `0.2.0-rc.2` even with
+ * `includePrerelease`, and neither does a bare `>=0.1.5-rc.1 <0.2.0`. The only
+ * portable form is an enumeration.
  *
- * A semantic check (does pnpm accept these peers against a real runtime?) is not
- * expressible here — this repo ships zero dependencies on purpose — so the peer
- * contract is verified by installing the plugin into a profile of each dsh line
- * and checking the mounts. This test pins the shape and the documentation that
- * keeps that decision from being "simplified" away.
+ * Why this matters more than it looks: dsh 0.2.0-rc.2 added a hard gate that
+ * REFUSES to import a plugin whose `@deepseek-ai/dsh`/`@deepseek-ai/dsh-*`
+ * peers do not match the running runtime version (dsh-app-boot's
+ * `evaluatePluginCompatibility`). A missing line does not warn — the whole
+ * package is skipped and its tools, skills and presets silently vanish. That is
+ * exactly what happened when 0.2.0-rc.2 shipped while these peers still stopped
+ * at `^0.1.7-rc.1`.
+ *
+ * `test/peers.test.js` therefore pins DECLARATION COVERAGE, not just the shape:
+ * every line in RUNTIME_LINES below must appear as a caret range in both dsh
+ * peers. It is deliberately not a semver reimplementation — the authoritative
+ * semantic check is the gate itself, verified by booting a profile of the line
+ * (`dsh --profile <scratch> --dump-config` shows the rows only when the gate
+ * passed).
  */
 
 const REPO = fileURLToPath(new URL('../', import.meta.url))
-const SUPPORTED_LINES = ['^0.1.5-rc.1', '^0.1.7-rc.1']
+
+/** Every dsh line this plugin claims. Add a line here when dsh ships one. */
+const RUNTIME_LINES = [
+  { line: '0.1.5', declared: '^0.1.5-rc.1', verified: '0.1.5-rc.2' },
+  { line: '0.1.7', declared: '^0.1.7-rc.1', verified: '0.1.7-rc.1' },
+  { line: '0.2.0', declared: '^0.2.0-rc.2', verified: '0.2.0-rc.2' },
+]
 
 const pkg = JSON.parse(await readFile(`${REPO}package.json`, 'utf8'))
 const readme = await readFile(`${REPO}README.md`, 'utf8')
 
-test('the dsh peers enumerate every supported line', () => {
+test('the dsh peers enumerate exactly the supported lines', () => {
+  const expected = RUNTIME_LINES.map(entry => entry.declared).join(' || ')
   for (const dependency of ['@deepseek-ai/dsh-tools', '@deepseek-ai/dsh-skill']) {
-    const range = pkg.peerDependencies[dependency]
-    assert.equal(typeof range, 'string', `${dependency} must stay a peerDependency`)
-    for (const line of SUPPORTED_LINES) {
-      assert.ok(range.includes(line), `${dependency} must name ${line}; got ${range}`)
-    }
-    assert.ok(range.includes('||'), `${dependency} must enumerate lines, not use a single caret range: ${range}`)
+    assert.equal(pkg.peerDependencies[dependency], expected, `${dependency} must enumerate every supported line, in order`)
   }
 })
 
-test('cordis and schemastery keep a caret range that spans both lines', () => {
-  // Both lines ship cordis 4.0.2+ and schemastery 3.18.x, so one caret range
-  // each is enough and enumerating them would only invite drift.
+test('the dsh peers cover the runtime version each line was verified on', () => {
+  // A caret range on `X.Y.Z[-pre]` covers that whole X.Y.Z line, prereleases
+  // included, so `declared` covers `verified` by construction — this keeps the
+  // two halves of each table row from drifting apart (the 0.2.0 line was missing
+  // entirely when 0.2.0-rc.2 shipped, which silently disabled the whole plugin).
+  for (const { line, declared, verified } of RUNTIME_LINES) {
+    assert.ok(declared.startsWith(`^${line}.`) || declared.startsWith(`^${line}-`), `${declared} must be a ${line} range`)
+    assert.ok(verified.startsWith(`${line}.`) || verified.startsWith(`${line}-`), `${verified} must be a ${line} version`)
+    // Same major.minor.patch is what makes the caret cover the verified version.
+    const tuple = value => value.replace(/^\^/, '').split('-')[0]
+    assert.equal(tuple(declared), tuple(verified), `${declared} must cover ${verified}`)
+  }
+})
+
+test('cordis and schemastery are not line-gated by the runtime check', () => {
+  // The gate only inspects peers named `@deepseek-ai/dsh` or `@deepseek-ai/dsh-*`,
+  // so these two keep a single caret range that spans every line.
   assert.equal(pkg.peerDependencies['@deepseek-ai/cordis'], '^4.0.1')
   assert.equal(pkg.peerDependencies['@deepseek-ai/schemastery'], '^3.18.1')
 })
 
-test('the README states which dsh lines are verified', () => {
-  for (const phrase of ['0.1.5-rc.1', '0.1.7-rc.1']) {
-    assert.ok(readme.includes(phrase), `README must name the supported dsh line ${phrase}`)
+test('the README states which dsh lines are verified and warns about the gate', () => {
+  for (const { verified } of RUNTIME_LINES) {
+    assert.ok(readme.includes(verified), `README must name the supported dsh version ${verified}`)
   }
   assert.ok(
     readme.includes('0.1.7') && (readme.includes('agentPresets') || readme.includes('.agent-presets')),
     'README must explain that dsh 0.1.7 changed how presets are declared',
+  )
+  assert.ok(
+    readme.includes('evaluatePluginCompatibility') || readme.includes('兼容性门禁'),
+    'README must warn that dsh 0.2.0+ refuses plugins whose peers miss its line',
   )
 })

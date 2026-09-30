@@ -2,11 +2,14 @@
 
 [![Awesome DSH Plugin](https://awesome-dsh-plugin.com/badge.svg)](https://awesome-dsh-plugin.com)
 
-Minecraft 开发插件 for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`)：让 agent 更擅长写 Minecraft 服务端插件与模组，覆盖 **MC 1.7.10 ~ 26.3 全时代**。适配 dsh **≥ 0.1.5-rc.1**（profile/bundle 插件体系；低于此版本请用 0.7.0 及更早版本）。两条线各实测一种形态：**0.1.5-rc.2 走目录形态、0.1.7-rc.1 走 agentPresets 注册形态**（0.1.5-rc.3 未单独实测，但 peer 范围覆盖它）。0.1.7-alpha 通道未验证。
+Minecraft 开发插件 for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`)：让 agent 更擅长写 Minecraft 服务端插件与模组，覆盖 **MC 1.7.10 ~ 26.3 全时代**。适配 dsh **≥ 0.1.5-rc.1**（profile/bundle 插件体系；低于此版本请用 0.7.0 及更早版本），覆盖三条线：**0.1.5-rc.x**（目录形态 preset）、**0.1.7-rc.x**（`agentPresets` 声明形态）、**0.2.0-rc.x**。实测：`0.1.5-rc.2` / `0.1.7-rc.1` / `0.2.0-rc.2`。
 
 已被 [awesome-dsh-plugin](https://awesome-dsh-plugin.com) 收录（`Skills` 分类）。
 
-> **dsh 0.1.7 起 preset 的声明方式变了**，本插件两种都支持并在运行时自动选择：0.1.5–0.1.6 的 preset 是 `$DSH_HOME/.agent-presets/<id>/` 目录（插件启动时拷贝，已存在则不覆盖本地修改）；0.1.7 起 preset 改为 Cordis 声明行（`@deepseek-ai/dsh-agent-preset`）交给 `agentPresets` 服务，插件随之改用 `agentPresets.register()` 提交同一批行（`preset/*/rows.js`）。两种形态由同一个源生成，并由测试锁死一致。0.1.7-alpha 通道未验证。
+> ⚠️ **dsh 0.2.0 起有插件兼容性门禁**（`dsh-app-boot` 的 `evaluatePluginCompatibility`）：导入插件前拿它的 `@deepseek-ai/dsh` / `@deepseek-ai/dsh-*` **peer 声明**与运行版本比对，**任一条不匹配就拒绝导入整包** —— 不是警告，是拒绝安装/整包被跳过（工具、技能、preset 全部消失，且 App 里可能只表现为"插件装了但没反应"）。而 node-semver 无法用单条范围表达"这些线的任意预发布版"（`^0.1.5-rc.1` 即使带 `includePrerelease` 也不匹配 `0.2.0-rc.2`），所以 peer **必须逐条枚举**；新增 dsh 线时同步加一条，否则插件会静默失效。详见 `test/peers.test.js`。
+> 万一 dsh 又先发了新线而本插件还没跟上，可以用门禁自带的精确版本豁免兜底（自担风险，仅对那一个版本生效）：`dsh plugin --profile <name> allow-version minecraft-dev@<版本> --dsh-version <运行版本> --accept-risk`。
+
+> **dsh 0.1.7 起 preset 的声明方式变了**，本插件两种都支持并在运行时自动选择：0.1.5–0.1.6 的 preset 是 `$DSH_HOME/.agent-presets/<id>/` 目录（插件启动时拷贝，已存在则不覆盖本地修改）；0.1.7 起 preset 改为 Cordis 声明行（`@deepseek-ai/dsh-agent-preset`）交给 `agentPresets` 服务，插件随之改用 `agentPresets.register()` 提交同一批行（`preset/*/rows.js`）。两种形态由同一个源生成，并由测试锁死一致。
 
 已发布 npm：[`minecraft-dev`](https://www.npmjs.com/package/minecraft-dev)（MIT）｜ 源码：[GitHub](https://github.com/sikadi233-hub/minecraft-dev)
 
