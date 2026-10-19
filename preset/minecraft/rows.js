@@ -194,10 +194,15 @@ produce broken builds:
 The minecraft-dev bundle registers four dedicated subagents at the host layer,
 available in every session's catalog: subagent_mc_plan (A 方案), subagent_mc_skeleton
 (B 框架), subagent_mc_content (C 内容), subagent_mc_verify (D 编译审查). Each is a
-spawn subagent with its own isolated context and a self-contained persona — the
-delegation prompt must carry absolute paths, the goal, and constraints; the child
-cannot see this conversation. All four are one-shot and block until done: run them in
-strict A→B→C→D order, never in parallel on the same project, never skipping a stage.
+spawn subagent with its own isolated context and a role Agent Preset carrying its
+self-contained persona — the delegation prompt must carry absolute paths, the goal,
+and constraints; the child cannot see this conversation.
+
+Delegation is asynchronous on dsh 0.2.1+ (the call returns an id at once and the runtime
+notifies you when the child finishes; earlier versions blocked until done). Either way the
+chain is strict A→B→C→D: start a stage, wait for its completion notice, read the result,
+then start the next stage. Never run two stages in parallel on the same project, never
+skip a stage, and never assume a stage finished just because the call returned.
 
 When to delegate: a new plugin/mod with 3+ distinct work items, or any task you
 estimate would cost several thousand tokens inline. Small single-file edits: do them
@@ -361,7 +366,6 @@ When ready, call exit_plan_mode with the complete plan markdown, starting with a
             provider: "spawn",
             toolName: "subagent",
             modelSelectionSettings: true,
-            backgroundMode: "continuable",
           },
         },
         {
@@ -370,7 +374,6 @@ When ready, call exit_plan_mode with the complete plan markdown, starting with a
           config: {
             provider: "fork",
             toolName: "subagent_fork",
-            backgroundMode: "continuable",
           },
         },
         {
@@ -380,7 +383,6 @@ When ready, call exit_plan_mode with the complete plan markdown, starting with a
           config: {
             provider: "codex",
             toolName: "subagent_codex",
-            enableRunInBackground: false,
             maxDepth: "provider-managed",
           },
         },
@@ -391,7 +393,6 @@ When ready, call exit_plan_mode with the complete plan markdown, starting with a
           config: {
             provider: "claude-code",
             toolName: "subagent_claude_code",
-            enableRunInBackground: false,
             maxDepth: "provider-managed",
           },
         },

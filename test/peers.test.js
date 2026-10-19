@@ -35,7 +35,7 @@ const REPO = fileURLToPath(new URL('../', import.meta.url))
 const RUNTIME_LINES = [
   { line: '0.1.5', declared: '^0.1.5-rc.1', verified: '0.1.5-rc.2' },
   { line: '0.1.7', declared: '^0.1.7-rc.1', verified: '0.1.7-rc.1' },
-  { line: '0.2.0', declared: '^0.2.0-rc.2', verified: '0.2.0-rc.2' },
+  { line: '0.2.0', declared: '^0.2.0-rc.2', verified: '0.2.1-rc.2' },
 ]
 
 const pkg = JSON.parse(await readFile(`${REPO}package.json`, 'utf8'))
@@ -49,16 +49,14 @@ test('the dsh peers enumerate exactly the supported lines', () => {
 })
 
 test('the dsh peers cover the runtime version each line was verified on', () => {
-  // A caret range on `X.Y.Z[-pre]` covers that whole X.Y.Z line, prereleases
-  // included, so `declared` covers `verified` by construction — this keeps the
-  // two halves of each table row from drifting apart (the 0.2.0 line was missing
-  // entirely when 0.2.0-rc.2 shipped, which silently disabled the whole plugin).
-  for (const { line, declared, verified } of RUNTIME_LINES) {
-    assert.ok(declared.startsWith(`^${line}.`) || declared.startsWith(`^${line}-`), `${declared} must be a ${line} range`)
-    assert.ok(verified.startsWith(`${line}.`) || verified.startsWith(`${line}-`), `${verified} must be a ${line} version`)
-    // Same major.minor.patch is what makes the caret cover the verified version.
-    const tuple = value => value.replace(/^\^/, '').split('-')[0]
-    assert.equal(tuple(declared), tuple(verified), `${declared} must cover ${verified}`)
+  // A caret range on `X.Y.Z[-pre]` covers every later patch of that X.Y line, so
+  // `^0.2.0-rc.2` covers 0.2.1-rc.2 while `^0.1.5-rc.1` does not — that is the
+  // whole reason the lines are enumerated. Comparing major.minor (not the full
+  // tuple) lets a line be re-verified on a newer patch without reshuffling peers;
+  // test 1 already pins the exact declared strings.
+  for (const { declared, verified } of RUNTIME_LINES) {
+    const minor = value => value.replace(/^\^/, '').split('-')[0].split('.').slice(0, 2).join('.')
+    assert.equal(minor(declared), minor(verified), `${declared} must cover ${verified}`)
   }
 })
 

@@ -24,6 +24,12 @@
  * - `minecraft-architect` — the expert plus the Codex(Astra) architecture
  *   handoff: the `mc_codex` tool and the `minecraft-codex-architect` skill,
  *   both mounted by that preset alone.
+ * - `mc-plan` / `mc-skeleton` / `mc-content` / `mc-verify` (v0.10) — the four
+ *   A–D subagent roles. dsh 0.2.1 removed `persona`/`toolFilter` from the
+ *   `tool-subagent` config (it throws on either key), so a role can only live in
+ *   an Agent Preset; `cordis.patch.yml` points each subagent row at one of these
+ *   with `agentPreset`. On ≤ 0.2.0 that key is silently ignored, so the rows
+ *   still mount as role-less subagents.
  *
  * Whole feature can be disabled with `autoInstallPreset: false` (the 0.1.5 file
  * copy only; the 0.1.7 registration is a service declaration with no filesystem
@@ -37,6 +43,7 @@ import { ensurePresetInstalled } from './lib/preset-install.js'
 import { registerPresetDefinitions } from './lib/preset-register.js'
 import { minecraftPreset } from './preset/minecraft/rows.js'
 import { minecraftArchitectPreset } from './preset/minecraft-architect/rows.js'
+import { rolePresets } from './preset/roles.js'
 
 /** Cordis plugin name. */
 export const name = 'minecraft-preset'
@@ -61,14 +68,22 @@ export const Config = Schema.object({
   autoInstallPreset: Schema.boolean().default(true),
 })
 
-/** The presets bundled with this package, in install order. */
+/** The presets bundled with this package, in install order (0.1.5 directory form). */
 export const BUNDLED_PRESETS = [
   { id: 'minecraft', srcDir: fileURLToPath(new URL('./preset/minecraft/', import.meta.url)) },
   { id: 'minecraft-architect', srcDir: fileURLToPath(new URL('./preset/minecraft-architect/', import.meta.url)) },
 ]
 
-/** The same two presets in their dsh 0.1.7+ declaration form. */
-export const PRESET_DEFINITIONS = [minecraftPreset, minecraftArchitectPreset]
+/**
+ * The same presets in their dsh 0.1.7+ declaration form.
+ *
+ * Since v0.10 the four subagent roles are presets too: dsh 0.2.1 removed
+ * `persona`/`toolFilter` from the `tool-subagent` config and made the Agent
+ * Preset the only place a role can live. The role presets are registered after
+ * the two user-facing ones so the picker keeps the interesting entries on top
+ * (their `order: 9x` puts them last regardless).
+ */
+export const PRESET_DEFINITIONS = [minecraftPreset, minecraftArchitectPreset, ...rolePresets]
 
 /**
  * Install both bundled presets on boot, in whichever form the running dsh

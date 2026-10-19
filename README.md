@@ -2,9 +2,13 @@
 
 [![Awesome DSH Plugin](https://awesome-dsh-plugin.com/badge.svg)](https://awesome-dsh-plugin.com)
 
-Minecraft 开发插件 for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`)：让 agent 更擅长写 Minecraft 服务端插件与模组，覆盖 **MC 1.7.10 ~ 26.3 全时代**。适配 dsh **≥ 0.1.5-rc.1**（profile/bundle 插件体系；低于此版本请用 0.7.0 及更早版本），覆盖三条线：**0.1.5-rc.x**（目录形态 preset）、**0.1.7-rc.x**（`agentPresets` 声明形态）、**0.2.0-rc.x**。实测：`0.1.5-rc.2` / `0.1.7-rc.1` / `0.2.0-rc.2`。
+Minecraft 开发插件 for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`)：让 agent 更擅长写 Minecraft 服务端插件与模组，覆盖 **MC 1.7.10 ~ 26.3 全时代**。适配 dsh **≥ 0.1.5-rc.1**（profile/bundle 插件体系；低于此版本请用 0.7.0 及更早版本），覆盖三条线：**0.1.5-rc.x**（目录形态 preset）、**0.1.7-rc.x**（`agentPresets` 声明形态）、**0.2.0-rc.x / 0.2.1-rc.x**。实测：`0.1.5-rc.2` / `0.1.7-rc.1` / `0.2.1-rc.2`。
 
 已被 [awesome-dsh-plugin](https://awesome-dsh-plugin.com) 收录（`Skills` 分类）。
+
+> ⚠️ **dsh 0.2.1 把子代理的 `persona` / `toolFilter` 删了**（`@deepseek-ai/dsh-tool-subagent`）：这两个键现在会**直接抛错** —— *"no longer supported; configure persona and tool plugins in an Agent Preset and select it with agentPreset (spawn only)"*；`backgroundMode` / `enableRunInBackground` 也一并消失（写了不报错，但完全不生效）。因此自 **v0.10.0** 起，A–D 四个角色的"人设 + 工具范围"改为 4 个 Agent Preset（`mc-plan` / `mc-skeleton` / `mc-content` / `mc-verify`，见 `preset/roles.js`），宿主层的 4 行只剩 `provider` / `toolName` / `agentPreset` / `maxDepth`。同时 0.2.1 的委派**一律异步**：调用立即返回 id、完成时通知，角色人设里已写明结果要放在最后一条消息里。
+>
+> 兼容性：`agentPreset` 在 **≤ 0.2.0** 上会被静默忽略（schemastery 保留未知键、旧版工具也不读它），所以同一份配置在旧版本上仍然挂载成功，只是那 4 个子代理不带角色人设 —— 旧版本用户可直接选择对应的 preset 来获得角色。详见 `test/subagent-rows.test.js`。
 
 > ⚠️ **dsh 0.2.0 起有插件兼容性门禁**（`dsh-app-boot` 的 `evaluatePluginCompatibility`）：导入插件前拿它的 `@deepseek-ai/dsh` / `@deepseek-ai/dsh-*` **peer 声明**与运行版本比对，**任一条不匹配就拒绝导入整包** —— 不是警告，是拒绝安装/整包被跳过（工具、技能、preset 全部消失，且 App 里可能只表现为"插件装了但没反应"）。而 node-semver 无法用单条范围表达"这些线的任意预发布版"（`^0.1.5-rc.1` 即使带 `includePrerelease` 也不匹配 `0.2.0-rc.2`），所以 peer **必须逐条枚举**；新增 dsh 线时同步加一条，否则插件会静默失效。详见 `test/peers.test.js`。
 > 万一 dsh 又先发了新线而本插件还没跟上，可以用门禁自带的精确版本豁免兜底（自担风险，仅对那一个版本生效）：`dsh plugin --profile <name> allow-version minecraft-dev@<版本> --dsh-version <运行版本> --accept-risk`。
@@ -250,8 +254,11 @@ npm run check-links  # 核对文档链接与 curse.maven projectId（联网；BR
 - 市场类型判定：preset 文件（`preset.yml` + `agent.cordis.yml`）必须放在仓库的 `preset/minecraft/` 子目录——放仓库根目录会把市场类型从 cordis-plugin 误判为 agent-preset。
 - preset 人设为 2026-09 基线；26.x 生态（NeoForge 26.3 beta）变化时以技能 references 更新为准。
 - **两种 preset 形态**（v0.9.0）：`agent.cordis.yml` 是 0.1.5/0.1.6 的目录安装源，`rows.js` 由它生成、供 0.1.7+ 的 `agentPresets.register()` 使用；`test/preset-rows-parity.test.js` 锁死两者一致（行 id/name 顺序、标量配置、所有块标量的逐字节文本）。只有两处刻意不同：`!!js` 平台表达式在 JS 里是真实布尔值，`dsh-workflow-worker-thread` 在 0.1.7 里换成 `dsh-workflow-ptc`。
-- 4 个子代理的 toolFilter：A 环白名单含 `web_search` + `web_fetch`（preset 的 `tool-web` 已设 `fetch: true`，宿主注册 `web_fetch`）；若部署自定义关闭 `fetch`，需把 `web_fetch` 从 A 的 allow 名单移除，否则 `restrict()` 启动校验会报未知工具。
-- toolFilter 名单在子代理启动时校验（`tools.restrict()`），未知工具名直接报错——部署裁剪工具集（如禁用 tool-fs/tool-web）时需同步改 `cordis.patch.yml` 的 allow 名单（报错信息会列出已知全局工具名，可据此调整）。
+- **四子代理的角色迁移（v0.10.0，dsh 0.2.1 起）**：`persona` / `toolFilter` 已从 `tool-subagent` 删除（写了两者之一会在挂载时抛错），角色改由 4 个 Agent Preset 承载，宿主行用 `agentPreset` 指过去。由此带来三条限制：
+  - **≤ 0.2.0 没有角色人设**：`agentPreset` 在旧版本上是未知键、被静默忽略，4 行仍能挂载，但子代理退化为"无角色的 spawn 子代理"。旧版本想要角色请直接在预设选择器里选 `mc-plan` / `mc-skeleton` / `mc-content` / `mc-verify`。
+  - **工具范围变成插件粒度**：新模型按整行插件组合，不能只给 `read` 不给 `write`；A 环因此同时拿到 `write` 与 `edit`。全局注册的 `mc_scaffold` / `mc_gradle` 对所有角色可见，靠人设约束谁去跑。
+  - **4 个角色 preset 会出现在预设选择器里**（`PresetDefinition` 没有 hidden 字段），已用 `order: 91~94` 排到最后，名字带 `minecraft-dev 子代理 X · …` 前缀。
+  - **委派一律异步**：0.2.1 取消了前台阻塞模式，调用立即返回 id、完成时通知；人设已写明"把最终答复放进最后一条消息"。
 - preset 自动安装（v0.6.0，**仅 0.1.5/0.1.6 的目录形态**）发生在 dsh 启动（插件挂载）时——装完插件**必须重启 dsh** 才触发（这同时也是插件生效所需的重启）；只写入、永不覆盖已有 preset（`agent.cordis.yml` 存在即跳过）；关闭开关 `autoInstallPreset: false`（只影响文件拷贝，不影响 0.1.7 的服务注册）；preset 内容更新不会自动传播——需删掉 `$DSH_HOME/.agent-presets/minecraft/` 让下次启动重新安装。**0.1.7+ 是服务注册，没有文件、没有这个陈旧问题：每次启动都按 `rows.js` 重新声明。**
 - **preset 人设更新（v0.7：铁律 7 信息核对）需重装 preset**：删 `$DSH_HOME/.agent-presets/minecraft/` → 重启 dsh → 自动重装（人设含"信息不足先批量提问"行为规则；不重装则只有技能层生效，行为规则缺失）。**重装会覆盖手改——更新前先备份该目录**。
 - 子代理继承宿主进程环境（`JAVA_HOME` 等）：老线（1.7.10/1.12.2/1.16.5）构建失败多为 JDK 8 环境问题而非代码问题，D 环会优先报环境。
