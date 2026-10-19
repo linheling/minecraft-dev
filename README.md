@@ -10,6 +10,10 @@ Minecraft 开发插件 for [DeepSeek Harness](https://github.com/deepseek-ai/dee
 >
 > 兼容性：`agentPreset` 在 **≤ 0.2.0** 上会被静默忽略（schemastery 保留未知键、旧版工具也不读它），所以同一份配置在旧版本上仍然挂载成功，只是那 4 个子代理不带角色人设 —— 旧版本用户可直接选择对应的 preset 来获得角色。详见 `test/subagent-rows.test.js`。
 
+> ⚠️ **人设模板只能用 `{{model}}`（和 `{{provider}}`）**：`dsh-system-prompt` 会对每个 `{{name}}` 做注册表校验，未注册的直接抛错，**在模型请求发出之前**就让该轮失败：
+> `unknown prompt variable "{{cwd}}" in section "deployment:persona-prefix"; registered variables: provider, model`。
+> dsh 0.2.1 的 `dsh-agent` 只注册 `provider` 与 `model`，没有 `cwd`/`workspace` 之类的变量。v0.10.0 的人设里写了 `{{cwd}}`，选择 Minecraft 系预设后首轮即失败（[issue #3](https://github.com/sikadi233-hub/minecraft-dev/issues/3)），**v0.10.1 已修复**（去掉该变量与只为插它而存在的 `persona.suffix` 行）。`test/persona-variables.test.js` 现在把可用变量钉死为 `provider`/`model`。
+
 > ⚠️ **dsh 0.2.0 起有插件兼容性门禁**（`dsh-app-boot` 的 `evaluatePluginCompatibility`）：导入插件前拿它的 `@deepseek-ai/dsh` / `@deepseek-ai/dsh-*` **peer 声明**与运行版本比对，**任一条不匹配就拒绝导入整包** —— 不是警告，是拒绝安装/整包被跳过（工具、技能、preset 全部消失，且 App 里可能只表现为"插件装了但没反应"）。而 node-semver 无法用单条范围表达"这些线的任意预发布版"（`^0.1.5-rc.1` 即使带 `includePrerelease` 也不匹配 `0.2.0-rc.2`），所以 peer **必须逐条枚举**；新增 dsh 线时同步加一条，否则插件会静默失效。详见 `test/peers.test.js`。
 > 万一 dsh 又先发了新线而本插件还没跟上，可以用门禁自带的精确版本豁免兜底（自担风险，仅对那一个版本生效）：`dsh plugin --profile <name> allow-version minecraft-dev@<版本> --dsh-version <运行版本> --accept-risk`。
 

@@ -28,14 +28,15 @@
 # ── identity ────────────────────────────────────────────────────────────────
 
 # The preset's own persona, shadowing the deployment default for this agent.
-# `{{model}}` and `{{cwd}}` resolve from the agent's own route and workspace.
+# `{{model}}` resolves from the agent's own route. Never add another variable: dsh
+# 0.2.1 only registers `provider` and `model`, and prompt assembly throws on the rest.
 - id: persona
   name: '@deepseek-ai/dsh-persona'
   config:
     prefix: |-
       You are the Minecraft development expert agent: a specialist in Minecraft server plugins
       and mods across the full era range, MC 1.7.10 through 26.3, on all five platforms —
-      Spigot, Paper, Forge, Fabric, NeoForge. Driven by {{model}}, working in {{cwd}}.
+      Spigot, Paper, Forge, Fabric, NeoForge. Driven by {{model}}.
 
       You are decisive and direct: no hedging, no ceremony, no filler. State what you are
       doing, do it, report the result in plain terms. If a version or API is uncertain, say
@@ -237,8 +238,6 @@
       Never re-register or reinstall either plugin — a second registration throws. This
       preset carries no self-modification tool. Your tool catalog stays identical across
       plan mode, and each session picks its preset at creation.
-
-    suffix: Your working directory is {{cwd}}.
 
 - id: agent-instructions
   name: '@deepseek-ai/dsh-agent-instructions'

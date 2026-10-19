@@ -20,7 +20,10 @@ const BASE_PRESET = fileURLToPath(new URL('../preset/minecraft/preset.yml', impo
 const ARCHITECT_PRESET = fileURLToPath(new URL('../preset/minecraft-architect/preset.yml', import.meta.url))
 
 const PERSONA_HEADING = '\n\n      ## Codex（Astra）架构分工\n'
-const SUFFIX_ANCHOR = '\n\n    suffix: '
+// The persona block ends at the next row: v0.10.1 dropped the `suffix:` line
+// (its only content was the unregistered `{{cwd}}` variable — issue #3), so the
+// anchor is the row that follows the persona block instead.
+const SUFFIX_ANCHOR = '\n\n- id: agent-instructions'
 const ROW_ANCHOR = '\n\n# ── Codex(Astra) architecture handoff'
 
 /** Remove the two documented insertions from the architect composition. */

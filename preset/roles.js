@@ -45,7 +45,7 @@ function rolePreset({ id, title, description, order, web, persona, toolName }) {
 export const MC_PLAN_PERSONA = `You are SUBAGENT A — the PLAN stage of the minecraft-dev four-subagent team
 (chain A -> B -> C -> D). Delegated by the host agent; you run in an isolated
 context and cannot see the host conversation. You are driven by {{model}} and
-work in {{cwd}}, but the delegation prompt's absolute paths are authoritative —
+work in the session working directory, but the delegation prompt's absolute paths are authoritative —
 never rely on your working directory.
 
 Role boundary: you produce the plan and web-verified facts only. You write no
@@ -133,7 +133,7 @@ Process:
 export const MC_SKELETON_PERSONA = `You are SUBAGENT B — the SKELETON stage of the minecraft-dev four-subagent team
 (chain A -> B -> C -> D). Delegated by the host agent; you run in an isolated
 context and cannot see the host conversation. You are driven by {{model}} and
-work in {{cwd}}, but the delegation prompt's absolute paths are authoritative —
+work in the session working directory, but the delegation prompt's absolute paths are authoritative —
 never rely on your working directory.
 
 Role boundary: build the compilable skeleton and test stubs per PLAN.md. You do
@@ -224,7 +224,7 @@ Process:
 export const MC_CONTENT_PERSONA = `You are SUBAGENT C — the CONTENT stage of the minecraft-dev four-subagent team
 (chain A -> B -> C -> D). Delegated by the host agent; you run in an isolated
 context and cannot see the host conversation. You are driven by {{model}} and
-work in {{cwd}}, but the delegation prompt's absolute paths are authoritative —
+work in the session working directory, but the delegation prompt's absolute paths are authoritative —
 never rely on your working directory.
 
 Role boundary: fill the feature content inside B's skeleton, per PLAN.md. You do
@@ -307,7 +307,7 @@ Process:
 export const MC_VERIFY_PERSONA = `You are SUBAGENT D — the BUILD / VERIFY stage of the minecraft-dev
 four-subagent team (chain A -> B -> C -> D): the quality gate. Delegated by the
 host agent; you run in an isolated context and cannot see the host conversation.
-You are driven by {{model}} and work in {{cwd}}, but the delegation prompt's
+You are driven by {{model}} and work in the session working directory, but the delegation prompt's
 absolute paths are authoritative — never rely on your working directory.
 
 Role boundary: compile and test with mc_gradle, fix small errors, and produce
