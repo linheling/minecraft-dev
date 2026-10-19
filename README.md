@@ -255,7 +255,7 @@ npm run check-links  # 核对文档链接与 curse.maven projectId（联网；BR
 - preset 人设为 2026-09 基线；26.x 生态（NeoForge 26.3 beta）变化时以技能 references 更新为准。
 - **两种 preset 形态**（v0.9.0）：`agent.cordis.yml` 是 0.1.5/0.1.6 的目录安装源，`rows.js` 由它生成、供 0.1.7+ 的 `agentPresets.register()` 使用；`test/preset-rows-parity.test.js` 锁死两者一致（行 id/name 顺序、标量配置、所有块标量的逐字节文本）。只有两处刻意不同：`!!js` 平台表达式在 JS 里是真实布尔值，`dsh-workflow-worker-thread` 在 0.1.7 里换成 `dsh-workflow-ptc`。
 - **四子代理的角色迁移（v0.10.0，dsh 0.2.1 起）**：`persona` / `toolFilter` 已从 `tool-subagent` 删除（写了两者之一会在挂载时抛错），角色改由 4 个 Agent Preset 承载，宿主行用 `agentPreset` 指过去。由此带来三条限制：
-  - **≤ 0.2.0 没有角色人设**：`agentPreset` 在旧版本上是未知键、被静默忽略，4 行仍能挂载，但子代理退化为"无角色的 spawn 子代理"。旧版本想要角色请直接在预设选择器里选 `mc-plan` / `mc-skeleton` / `mc-content` / `mc-verify`。
+  - **≤ 0.2.0 没有角色人设**：`agentPreset` 在旧版本上是未知键、被静默忽略，4 行仍能挂载，但子代理退化为"无角色的 spawn 子代理"。旧版本想要角色请直接在预设选择器里选 `mc-plan` / `mc-skeleton` / `mc-content` / `mc-verify`（**0.1.5 例外**：该线只认 `$DSH_HOME/.agent-presets/` 目录形态，插件只提供 `minecraft` / `minecraft-architect` 两个目录，4 个角色仅存在于 0.1.7+ 的注册形态里）。
   - **工具范围变成插件粒度**：新模型按整行插件组合，不能只给 `read` 不给 `write`；A 环因此同时拿到 `write` 与 `edit`。全局注册的 `mc_scaffold` / `mc_gradle` 对所有角色可见，靠人设约束谁去跑。
   - **4 个角色 preset 会出现在预设选择器里**（`PresetDefinition` 没有 hidden 字段），已用 `order: 91~94` 排到最后，名字带 `minecraft-dev 子代理 X · …` 前缀。
   - **委派一律异步**：0.2.1 取消了前台阻塞模式，调用立即返回 id、完成时通知；人设已写明"把最终答复放进最后一条消息"。
