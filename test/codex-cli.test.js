@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, win32 } from 'node:path'
 import {
   CODEX_SANDBOXES,
   DEFAULT_CODEX_SANDBOX,
@@ -33,7 +33,10 @@ test('findCodexExecutable prefers PATH, then the app-server copy, then the deskt
   assert.deepEqual(onPath.path, pathExe)
   assert.equal(onPath.source, 'PATH')
 
-  const appServerExe = join(home, '.codex', 'plugins', '.plugin-appserver', 'codex.exe')
+  // The implementation resolves candidates with path.win32 when the target
+  // platform is win32; expectations must use the same flavour (host `join`
+  // would mix separators on a POSIX CI runner).
+  const appServerExe = win32.join(home, '.codex', 'plugins', '.plugin-appserver', 'codex.exe')
   const appServer = findCodexExecutable({
     platform: 'win32',
     home,
@@ -44,7 +47,7 @@ test('findCodexExecutable prefers PATH, then the app-server copy, then the deskt
   assert.deepEqual(appServer.path, appServerExe)
   assert.equal(appServer.source, 'codex-app-server')
 
-  const desktopExe = join('C:\\Users\\tester\\AppData\\Local', 'OpenAI', 'Codex', 'bin', 'abc123', 'codex.exe')
+  const desktopExe = win32.join('C:\\Users\\tester\\AppData\\Local', 'OpenAI', 'Codex', 'bin', 'abc123', 'codex.exe')
   const desktop = findCodexExecutable({
     platform: 'win32',
     home,

@@ -107,7 +107,10 @@ test('installs two presets side by side under distinct ids, independently skippe
 })
 
 test('resolveDshHome honors DSH_HOME, tilde expansion and the ~/.dsh fallback', () => {
-  assert.equal(resolveDshHome({ DSH_HOME: 'C:\\Custom\\Home' }), 'C:\\Custom\\Home')
+  // Use an absolute-looking home that is valid for the running platform: a
+  // Windows drive path is relative on POSIX, so the case is split.
+  const custom = process.platform === 'win32' ? 'C:\\Custom\\Home' : '/custom/home'
+  assert.equal(resolveDshHome({ DSH_HOME: custom }), custom)
   assert.equal(resolveDshHome({ DSH_HOME: '~/mc-home' }), join(homedir(), 'mc-home'))
   assert.equal(resolveDshHome({ DSH_HOME: '   ' }), join(homedir(), '.dsh'))
   assert.equal(resolveDshHome({}), join(homedir(), '.dsh'))
