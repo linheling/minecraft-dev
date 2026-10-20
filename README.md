@@ -246,8 +246,17 @@ cp -r <minecraft-dev 仓库>/preset/minecraft ~/.dsh/.agent-presets/
 
 ```sh
 npm run test         # node --test 单测（纯函数，无 dsh 依赖）
+npm run check:syntax # node --check 全量语法门禁
 npm run check-links  # 核对文档链接与 curse.maven projectId（联网；BROKEN=0 为通过）
 ```
+
+### 持续集成（GitHub Actions）
+
+本仓库没有 npm 运行时依赖（`@deepseek-ai/*` 全是 peerDependencies，由 dsh 宿主提供），所以 CI 不装包，只跑脚本：
+
+- `.github/workflows/ci.yml`：push 到 `master` / PR / 手动触发。`syntax` job 跑 `check:syntax`；`test` job 是 `ubuntu-latest` + `windows-latest` × Node 22/24 的四格矩阵跑 `npm test`，`ubuntu`×24 那格额外跑 `test:coverage`（阈值 80%）。
+- `.github/workflows/doc-links.yml`：每周一 03:23 UTC + 手动触发，跑 `check-links`。外链超时/403 记 UNVERIFIABLE 不失败，404/410/5xx 或 curse.maven projectId 不符才是 BROKEN。
+- 测试会逐字节比对 UTF-8 文本，Windows 上若被 CRLF 改写会假失败——`.gitattributes` 已把文本钉成 `eol=lf`。
 
 ### npm 发布（用户已授权自动执行）
 

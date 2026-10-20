@@ -1,0 +1,52 @@
+name: CI
+
+# The plugin has no runtime npm dependencies (peer-only, provided by the dsh
+# host), so CI never installs packages: it checks out, sets up Node, and runs
+# the scripts. Both shells matter: the test suite compares UTF-8 bytes, so a
+# Windows checkout with CRLF would fail — .gitattributes pins eol=lf.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  syntax:
+    name: syntax gate (node --check)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: npm run check:syntax
+
+  test:
+    name: tests (${{ matrix.os }}, node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+      # `node --test test/*.test.js`: cmd leaves the glob literal and Node 22+
+      # expands it; bash expands it before Node sees it. Both work.
+      - run: npm test
+      - name: coverage floor
+        if: matrix.os == 'ubuntu-latest' && matrix.node == 24
+        run: npm run test:coverage

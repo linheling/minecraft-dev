@@ -1,0 +1,30 @@
+name: Doc links
+
+# Weekly, not per-push: the check fetches every external link (minecraft.wiki,
+# Forge/NeoForge/Paper maven, api.cfwidget.com, ...). Transient failures are
+# reported as UNVERIFIABLE and do not fail the run; BROKEN (404/410/5xx or a
+# curse.maven projectId mismatch) does.
+
+on:
+  schedule:
+    - cron: '23 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doc-links
+  cancel-in-progress: true
+
+jobs:
+  links:
+    name: check doc links
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: npm run check-links

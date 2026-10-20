@@ -57,7 +57,7 @@
     "@deepseek-ai/schemastery": "^3.18.1"
   },
   "scripts": {
-    "test": "node --test \"test/*.test.js\"",
+    "test": "node --test test/*.test.js",
     "test:coverage": "node scripts/coverage.mjs",
     "check:syntax": "node scripts/check-syntax.mjs",
     "check-links": "node scripts/check-doc-links.mjs",
