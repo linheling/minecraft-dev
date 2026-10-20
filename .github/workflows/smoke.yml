@@ -59,11 +59,10 @@ jobs:
             dir: .smoke/forge-1.12.2
             # Gradle 4.9 is EOL and only runs on Java 8; the pair is the
             # documented way to build 1.12.2 mods, and setup-java pins a real
-            # Temurin 8 below instead of relying on the runner default. Until a
-            # dispatched run proves this 2018-era toolchain on the current
-            # runner image, keep the leg advisory (visible red, non-blocking);
-            # flip `experimental` to false after the first green dispatch.
-            experimental: true
+            # Temurin 8 below instead of relying on the runner default. This leg
+            # passed on the first dispatch (run 39459854130, 2026-10-21), so it
+            # is a normal blocking leg now.
+            experimental: false
 
     steps:
       - name: Checkout

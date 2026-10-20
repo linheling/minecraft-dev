@@ -66,9 +66,14 @@ jobs:
       # a broken entry-point export could pass every other job. Install the
       # published packages and run that file with the skip turned into a hard
       # failure. --no-save/--no-package-lock keep the checkout clean.
+      # Do NOT add --legacy-peer-deps: npm 11 silently no-ops (`up to date,
+      # audited 1 package`) against this package.json's multi-range
+      # peerDependencies, and in save mode it crashes with
+      # "Cannot read properties of undefined (reading 'spec')". A plain install
+      # resolves the tree correctly and is what users run.
       - name: install peer packages
         run: >
-          npm install --no-save --no-package-lock --legacy-peer-deps
+          npm install --no-save --no-package-lock
           @deepseek-ai/cordis@4.0.5
           @deepseek-ai/dsh-tools@0.2.1-rc.2
           @deepseek-ai/dsh-skill@0.2.1-rc.2

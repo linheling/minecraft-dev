@@ -260,7 +260,7 @@ npm run smoke:build      # 生成一个真实工程用于构建冒烟（之后�
 - `.github/workflows/ci.yml`：push 到 `master` / PR / 手动触发。`syntax` job 跑 `check:syntax`；`test` job 是 `ubuntu-latest` + `windows-latest` × Node 22/24 的四格矩阵跑 `npm test`，`ubuntu`×24 那格额外跑 `test:coverage`（阈值 80%）；`plugin-load` job 用 `npm install --no-save` 装已发布的 `@deepseek-ai/*` peer 包，再以 `REQUIRE_PLUGIN_DEPS=1` 跑 `modules.test.js` —— 本地默认跳过缺依赖的模块测试，这个 job 把跳过变成硬失败。
 - `.github/workflows/doc-links.yml`：每周一 03:23 UTC + 手动触发，跑 `check-links`。外链超时/403 记 UNVERIFIABLE 不失败，404/410/5xx 或 curse.maven projectId 不符才是 BROKEN。
 - `.github/workflows/version-drift.yml`：每周一 04:17 UTC + 手动触发（可勾 strict），跑 `check:versions` 报告 `lib/versions.js` 与上游 metadata 的漂移；不可达 host 只记 unreachable，不算漂移。
-- `.github/workflows/smoke.yml`：每周一 03:17 UTC + 手动触发，用 `mc_scaffold` 生成 4 条代表线（paper 1.21.8 / fabric 26.3 / neoforge 26.3 / forge 1.12.2）并跑真实 `gradlew build`。forge 1.12.2 腿暂时 `experimental`（Gradle 4.9 + JDK 8 老工具链，首次 dispatch 转绿后转正）。
+- `.github/workflows/smoke.yml`：每周一 03:17 UTC + 手动触发，用 `mc_scaffold` 生成 4 条代表线（paper 1.21.8 / fabric 26.3 / neoforge 26.3 / forge 1.12.2）并跑真实 `gradlew build`。四条腿在首次 dispatch（2026-10-21，run 39459854130）即 4/4 全绿，forge 1.12.2（Gradle 4.9 + JDK 8）也已转正为阻塞腿。
 - 测试会逐字节比对 UTF-8 文本，Windows 上若被 CRLF 改写会假失败——`.gitattributes` 已把文本钉成 `eol=lf`。
 
 ### npm 发布（用户已授权自动执行）
