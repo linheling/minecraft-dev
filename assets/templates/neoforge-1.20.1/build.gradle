@@ -9,7 +9,7 @@ plugins {
 version = "0.1.0"
 group = "{{pkg}}"
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+java.toolchain.languageVersion = JavaLanguageVersion.of({{javaVersion}})
 
 legacyForge {
     version = "{{mcVersion}}-{{forgeVersion}}"

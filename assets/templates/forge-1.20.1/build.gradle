@@ -10,7 +10,7 @@ version = "0.1.0"
 group = "{{pkg}}"
 archivesBaseName = "{{name}}"
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+java.toolchain.languageVersion = JavaLanguageVersion.of({{javaVersion}})
 
 minecraft {
     mappings channel: mapping_channel, version: mapping_version

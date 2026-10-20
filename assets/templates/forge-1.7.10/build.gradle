@@ -25,9 +25,14 @@ sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
 processResources {
-    // 把 version/mcversion 展开进 mcmod.info。
+    // 把 version/mcversion 展开进 mcmod.info（MDK 原样：展开一次，其余资源照抄）。
+    inputs.property 'version', version
+    inputs.property 'mcversion', '{{mcVersion}}'
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
         expand 'version': version, 'mcversion': '{{mcVersion}}'
+    }
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
     }
 }

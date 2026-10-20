@@ -24,4 +24,4 @@ gradlew.bat build
 - `src/main/resources/META-INF/mods.toml` — mods.toml（`${mod_id}` 等由 Gradle expand 替换）
 - `src/main/resources/pack.mcmeta` — pack_format 15
 - `build.gradle` — ForgeGradle 6（坐标 `{{forgeGradle}}`）+ official 映射 + Java 17 toolchain + reobfJar
-- `settings.gradle` — foojay 0.7.0 自动装 JDK
+- `settings.gradle` — foojay 1.0.0 自动装 JDK

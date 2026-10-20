@@ -75,6 +75,7 @@ Minecraft 开发插件 for [DeepSeek Harness](https://github.com/deepseek-ai/dee
 4. DSH 只替换这些标记（不动签名/结构/接口），最后用 `mc_gradle` 跑到 build exitCode 0，并确认标记计数为 0。
 
 **透明度**（本预设的硬要求）：执行前先声明这一步会消耗**你自己的 Codex**（订阅账号计入 Codex 用量窗口；API key 计入余额），而且 DSH 侧不会显示这笔消耗；返回完整输出、退出码、用时、改动文件清单、会话/线程 id、rollout 文件路径与 token 用量（从 rollout 的 `token_count` 事件读，源码写的是 `turn/completed` 不带 usage）；失败不静默重试，委派次数上限为「架构 1 次 + 修复 ≤1 次」。
+`package.json` 的 `disclosure` 与这段说明保持一致：`network` 如实写了「mc_codex 派生的 Codex 子进程会联网」，插件进程自身不发网络请求；因此 `offlineMode` 标为 `false` —— 但只有在用 mc_codex 时才需要网络，不装/不用它时其余技能与 `mc_scaffold`/`mc_gradle` 完全离线可用。
 
 **关于"这次会话在 Codex 桌面版里看得见吗"（实测结论）**：默认的 `mode: "app-server"` **看得见**——app-server 建的线程是 `source = vscode`、`originator = DeepSeek Harness`，实测跑完立刻能被桌面版用的 `thread/list {}` 查到（同一条 App 侧边栏查询只会返回 `vscode`/`appServer` 一类，不返回 `exec`/`cli`），所以你可以直接在 App 里点开续聊，或在命令行 `codex resume <threadId>`。两种模式都会把内容**持久化**在 `~/.codex/sessions/<年>/<月>/<日>/rollout-…-<id>.jsonl`（`mc_codex` 直接回报这条路径，打开就是 Codex 的完整过程）：
 

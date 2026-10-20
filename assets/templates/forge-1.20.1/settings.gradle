@@ -7,7 +7,7 @@ pluginManagement {
 
 plugins {
     // 自动下载 java.toolchain 所需 JDK（MDK 原样）。
-    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.7.0'
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 
 rootProject.name = "{{name}}"
