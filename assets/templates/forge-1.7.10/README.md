@@ -18,7 +18,7 @@ gradlew.bat build
 
 ## Wrapper
 
-本模板自带 `gradle/wrapper/gradle-wrapper.properties`，钉 **Gradle {{gradleVersion}}**（distributionUrl 指向 `gradle-{{gradleVersion}}-bin.zip`）；`gradlew` / `gradlew.bat` / `gradle-wrapper.jar` 由脚手架从全局 `assets/templates/common/wrapper/` 复制（wrapper jar 时代无关，现代 jar 可启动老发行版）。common 的 properties 指向 8.14.3，仅作模板漏放时的兜底，本模板以自带 properties 为准。构建报错先核对 distributionUrl 与 JDK 配对（Gradle 7.4.2 只能跑 JDK ≤18，见 minecraft-java-build）。
+本模板自带 `gradle/wrapper/gradle-wrapper.properties`，钉 **Gradle {{gradleVersion}}**（distributionUrl 指向 `gradle-{{gradleVersion}}-bin.zip`）；`gradlew` / `gradlew.bat` / `gradle-wrapper.jar` 由脚手架从全局 `assets/templates/common/wrapper/` 复制（wrapper jar 时代无关，现代 jar 可启动老发行版）。common 的 properties 用 `{{gradleVersion}}` 占位、由脚手架按目标线渲染（forge 各时代吃模板自带值；paper 走这条兜底，1.20/1.21 → 8.14.3，26.x → 9.2.1），仅作模板漏放时的兜底，本模板以自带 properties 为准。构建报错先核对 distributionUrl 与 JDK 配对（Gradle 7.4.2 只能跑 JDK ≤18，见 minecraft-java-build）。
 
 ## Layout
 

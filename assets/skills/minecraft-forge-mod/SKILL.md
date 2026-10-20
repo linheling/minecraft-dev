@@ -43,7 +43,7 @@ Forge 是 Minecraft 历史最久、老版本生态最全的模组加载器（201
 
 - **buildscript-classpath 时代（1.7.10 / 1.12.2）**：build.gradle 顶部 `buildscript { repositories { ... }; dependencies { classpath '<ForgeGradle坐标>' } }` + `apply plugin: 'forge'`（1.7.10）或 `apply plugin: 'net.minecraftforge.gradle'`（1.12.2）。无 settings.gradle。
 - **plugins-block 时代（1.16.5 / 1.20.1）**：1.16.5 仍用 buildscript + `apply plugin`（FG5 MDK 写法）；1.20.1 用 `plugins { id 'net.minecraftforge.gradle' version '6.0.54' }`（插件来自 maven.minecraftforge.net，settings.gradle 的 pluginManagement 里已配）+ foojay 自动装 JDK。
-- **wrapper 与 common/wrapper 的关系**：模板目录自带 `gradle/wrapper/gradle-wrapper.properties` 钉各时代 Gradle（7.4.2/4.9/7.3.3/8.8）；`gradlew`/`gradlew.bat`/`gradle-wrapper.jar` 由脚手架从 `assets/templates/common/wrapper/` 复制（jar 时代无关，现代 wrapper jar 启动老发行版一般可用；common 的 properties 指向 8.14.3，仅作模板漏放时的兜底，模板自带 properties 优先级更高）。**改模板/排查构建时先看 properties 里的 distributionUrl**。
+- **wrapper 与 common/wrapper 的关系**：模板目录自带 `gradle/wrapper/gradle-wrapper.properties` 钉各时代 Gradle（7.4.2/4.9/7.3.3/8.8）；`gradlew`/`gradlew.bat`/`gradle-wrapper.jar` 由脚手架从 `assets/templates/common/wrapper/` 复制（jar 时代无关，现代 wrapper jar 启动老发行版一般可用；common 的 properties 用 `{{gradleVersion}}` 占位、由脚手架按目标线渲染（forge 各时代吃模板自带值；paper 走这条兜底，1.20/1.21 → 8.14.3，26.x → 9.2.1），模板自带 properties 优先级更高）。**改模板/排查构建时先看 properties 里的 distributionUrl**。
 - **reobfJar 与 SRG 概念**：开发环境用人类可读名（老时代 MCP 名 `func_xxx`→语义名；新时代 official mojmap 名），运行时是混淆名/SRG。1.7.10 的 build 自动 reobf（FG1.x 内置在 jar 流程）；1.12.2 起必须 `jar.finalizedBy('reobfJar')`。**上传的产物必须 reobf 后**，dev 版本 jar 只能在本机 runClient 用。
 - 1.7.10 官方 MDK 已下线（files.minecraftforge.net 404，R2），本模板内置 anatawa12 fork 方案。
 - 1.16.5 模板无 settings.gradle（MDK 时代无 foojay），本机必须预装兼容 JDK 再跑 wrapper。

@@ -177,9 +177,10 @@ test('lineCoords returns the per-line pinned coordinates', () => {
   })
   assert.equal(lineCoords('neoforge', '26.3').moddevVersion, '2.0.147')
   assert.equal(lineCoords('neoforge', '26.3').neoVersion, '26.3.0.12-beta')
-  // Paper has no coords: falls back to {}.
-  assert.deepEqual(lineCoords('paper', '1.21.8'), {})
-  assert.deepEqual(lineCoords('paper', '26.3'), {})
+  // Paper pins only the wrapper's Gradle version (its build script is Kotlin
+  // DSL, so Java 25 needs Gradle 9.1+; verified with a real build 2026-10-20).
+  assert.deepEqual(lineCoords('paper', '1.21.8'), { gradleVersion: '8.14.3' })
+  assert.deepEqual(lineCoords('paper', '26.3'), { gradleVersion: '9.2.1' })
 })
 
 test('paperApiVersion regression stays unchanged', () => {

@@ -107,6 +107,15 @@ test('scaffoldProject derives Java 25 for the 26.x line', async () => {
     const build = await readFile(path.join(result.projectDir, 'build.gradle.kts'), 'utf8')
     assert.match(build, /JavaLanguageVersion\.of\(25\)/)
     assert.match(build, /paper-api:26\.2\.build\.\+/)
+
+    // Paper ships no wrapper of its own, so the common wrapper must be rendered
+    // per line: Java 25 requires Gradle >= 9.1 (8.14.3's Kotlin DSL compiler
+    // throws `IllegalArgumentException: 25.0.4.1` on JDK 25, verified 2026-10-20).
+    const props = await readFile(
+      path.join(result.projectDir, 'gradle', 'wrapper', 'gradle-wrapper.properties'),
+      'utf8',
+    )
+    assert.match(props, /gradle-9\.2\.1-bin\.zip/)
   } finally {
     await rm(target, { recursive: true, force: true })
   }

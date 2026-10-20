@@ -105,7 +105,7 @@ test('renderArchitectBrief fills every token and refuses to leave one behind', (
   assert.match(text, /V=1\.21\.8/)
   assert.match(text, /J=21/)
   assert.match(text, /API=io\.papermc\.paper:paper-api:1\.21\.8-R0\.1-SNAPSHOT/)
-  assert.match(text, /COORDS=\(platform has no pinned coordinates\)/)
+  assert.match(text, /COORDS=- gradleVersion: 8\.14\.3/)
   assert.match(text, /DIR=C:\\work\\demo/)
   assert.match(text, /GOAL=加个 \/spawn 命令/)
   assert.doesNotMatch(text, /\{\{[A-Z_]+\}\}/)
