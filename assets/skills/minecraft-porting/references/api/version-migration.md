@@ -1,6 +1,6 @@
 # 版本族迁移参考（构建 → 注册 → 网络/数据 → 资源）
 
-> 核对日期：2026-10。坐标唯一来源：lib/versions.js（19 个钉选组合，`mc_scaffold` 直接注入；fabric / forge / neoforge 严格匹配）。本文件未列的组合（1.20.2~1.20.4、1.20.1 以外的 Forge 线、1.20.1 之前的 NeoForge）本仓库没有钉选坐标，标 UNVERIFIED。Java/Gradle 配对规则见 assets/skills/minecraft-java-build/SKILL.md 第 1 节（Java 25 需 Gradle ≥ 9.1、Java 24 ≥ 8.14、Java 21 ≥ 8.5、Java 17 ≥ 7.3）。
+> 核对日期：2026-10。坐标唯一来源：lib/versions.js（19 个钉选组合，`mc_scaffold` 直接注入；fabric / forge / neoforge 严格匹配）。本文件未列的组合（1.20.2~1.20.4、1.20.1 以外的 Forge 线、1.20.1 之前的 NeoForge）本仓库没有钉选坐标，按未核实处理并写明原因。Java/Gradle 配对规则见 assets/skills/minecraft-java-build/SKILL.md 第 1 节（Java 25 需 Gradle ≥ 9.1、Java 24 ≥ 8.14、Java 21 ≥ 8.5、Java 17 ≥ 7.3）。
 
 ## 1. 版本族边界表
 
@@ -17,7 +17,7 @@
 | 1.21.x 主线 | 1.21.11 | 21 | 9.2.1（NeoForge）/ 9.5.1（Fabric） | moddev `2.0.144` / NeoForge `21.11.45`；loom `1.17.19` / loader `0.19.3` / Fabric API `0.141.6+1.21.11` | official（mojmap 已改用 `Identifier`） | `neoforge.mods.toml` / `fabric.mod.json` | 有（`1.21`） |
 | 26.x 现行 | 26.2 | 25 | 9.2.1 / 9.5.1 | moddev `2.0.144` / NeoForge `26.2.0.59`；loom `1.17.19` / loader `0.19.3` / Fabric API `0.157.0+26.2` | 26.1 起不混淆 | 同上 | 有（`26`） |
 | 26.3 | 26.3 | 25 | 9.2.1 / 9.5.1 | moddev `2.0.147` / NeoForge `26.3.0.12-beta`；loom `1.17.21` / loader `0.19.5` / Fabric API `0.161.0+26.3` | 不混淆 | 同上 | 有（`26.3`） |
-| 1.20.2~1.20.4 | 1.20.4 | 17 | 8.x（无钉选） | Forge 已停更；NeoForge `20.2`~`20.4` | official `1.20.4` | `neoforge.mods.toml`（NeoForge 20.2 起） | 无（UNVERIFIED） |
+| 1.20.2~1.20.4 | 1.20.4 | 17 | 8.x（无钉选） | Forge 已停更；NeoForge 20.2~20.4 | official 1.20.4 | `neoforge.mods.toml`（NeoForge 20.2 起） | 无（已核实：lib/versions.js 的 19 个组合无 1.20.2~1.20.4 条目）；该线存在性与元数据切换点 UNVERIFIED（NeoForge 官方源 2026-10-21 本机不可达，待 CI/联网复核） |
 
 ### 1.2 服务端插件线（Paper / Spigot）
 
@@ -73,19 +73,19 @@ Paper 坐标由 lib/versions.js 的 `getPaperApiVersion` 生成：1.x 版本线�
 - 包名：`net.minecraftforge.*` → `net.neoforged.*`（完整对照见 forge-to-neoforge.md 第 2 节）。
 - 总线：`FMLJavaModLoadingContext` 移除 → `@Mod` 构造器注入 `IEventBus`；game bus → `NeoForge.EVENT_BUS`；`@EventBusSubscriber` 的 `Bus.FORGE` 改 `Bus.GAME`。
 - 注册：`RegistryObject`→`DeferredHolder`；`ForgeRegistries.ITEMS`→`Registries.ITEM`。
-- 数据：1.20.5+ 的 `ItemStack` NBT→`DataComponents`；网络 `SimpleChannel`→payload（签名 UNVERIFIED，见 api-renames.md）。
+- 数据：1.20.5+ 的 `ItemStack` NBT→`DataComponents`（边界已核实：minecraft.wiki Pack_format 的 1.20.5~1.20.6 行；方法签名以 javadoc 为准）；网络 `SimpleChannel`→payload，签名 UNVERIFIED（1.20.5+ 加载器官方源 2026-10-21 本机不可达，待 CI/联网复核），见 api-renames.md。
 - 验收：build 0；`runClient` 进世界；同 `modid` + 同注册名的旧存档可进；物品/方块/配方都在。
 
 ### 2.5 1.20.1 → 1.20.5 / 1.21.1（Java 21 + 数据组件）
 
 - 构建：Java toolchain 17→21（Gradle 需 ≥ 8.5；模板给 `9.2.1`）；NeoForge 定到 `21.1.249`（1.21.1）或 `21.11.45`（1.21.11），moddev `2.0.144`。
 - 注册：NeoForge 20.6 起 `DeferredRegister.register` 返回 `DeferredHolder`，`RegistryObject` 不再存在（见 assets/skills/minecraft-neoforge-mod/references/api/deferred-register.md:30-34）。
-- 物品数据：`ItemStack.getTag()` / `getOrCreateTag()` 移除 → `get(DataComponents.X)` / `set(...)`；自定义数据用 `CustomData`（具体签名 UNVERIFIED，查 1.20.5+ javadoc）。
-- 物品创建：1.21.2+ vanilla 要求 `Item.Properties().setId(ResourceKey)`（Fabric 侧已核实，见 assets/skills/minecraft-fabric-mod/references/api/registries-and-items.md:40-46）；NeoForge 的 DeferredRegister 是否代劳未核实（UNVERIFIED），生成骨架后先看模板写法。
-- 网络：`SimpleChannel` 体系移除，改 `CustomPacketPayload` + `PayloadRegistrar`（UNVERIFIED，见 api-renames.md 第 2 节）。
-- 创造栏：`CreativeModeTab.TAB_*` 在 1.21 移除（见 forge-modern-api.md:104）；替换写法 UNVERIFIED，查目标版本 `CreativeModeTab` 注册示例。
+- 物品数据：`ItemStack.getTag()` / `getOrCreateTag()` 移除 → `get(DataComponents.X)` / `set(...)`（组件系统与 1.20.5 边界已核实：Fabric Custom Data Components 页、minecraft.wiki Pack_format）；自定义数据用 `CustomData`，其具体方法名 UNVERIFIED（无可达官方页覆盖，2026-10-21，待 CI/联网复核），查 1.20.5+ javadoc。
+- 物品创建：1.21.2+ vanilla 要求 `Item.Properties().setId(ResourceKey)`（Fabric 侧已核实，见 assets/skills/minecraft-fabric-mod/references/api/registries-and-items.md:40-46）；NeoForge 的 DeferredRegister 是否代劳 UNVERIFIED（NeoForge 官方源 2026-10-21 本机不可达，待 CI/联网复核），生成骨架后先看模板写法。
+- 网络：`SimpleChannel` 体系移除，改 `CustomPacketPayload` + `PayloadRegistrar`，签名 UNVERIFIED（1.20.5+ 加载器官方源 2026-10-21 本机不可达，待 CI/联网复核），见 api-renames.md 第 2 节。
+- 创造栏：`CreativeModeTab.TAB_*` 在 1.21 移除（见 forge-modern-api.md:104）；Fabric / vanilla 替代写法已核实（`FabricCreativeModeTab.builder()` + `Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, key, tab)`）；NeoForge 侧替换写法 UNVERIFIED（NeoForge 官方源 2026-10-21 本机不可达，待 CI/联网复核），查目标版本 `CreativeModeTab` 注册示例。
 - 元数据：1.21.1 必须写 `modLoader="javafml"`；21.11+ 该字段不再需要（见 assets/skills/minecraft-neoforge-mod/SKILL.md:11）。
-- 数据包：`pack.mcmeta` 的 `pack_format` 按 1.21.x 取新值（本仓库未收录具体数值，UNVERIFIED，抄目标模板）。
+- 数据包：`pack.mcmeta` 的 `pack_format` 按目标线抄模板；minecraft.wiki Pack_format 已核实：1.20.5~1.20.6 资源包 32、1.21.7~1.21.8 为 64、1.21.9~1.21.10 为 69.0、1.21.11 为 75.0、26.2 为 88.0、26.3 为 97.1。
 - 验收：build 0；`runData` 通过；`runClient` 进世界；旧存档物品的 NBT 数据能读到（或明确迁移策略）。
 
 ### 2.6 1.21.11 → 26.1 / 26.2 / 26.3（不混淆）

@@ -1,6 +1,6 @@
 # 映射体系与查询工作流（MCP / SRG / official / Yarn）
 
-> 核对日期：2026-10。外部来源：Fabric 官方「Migrating Mappings」页（https://docs.fabricmc.net/develop/porting/mappings/ ，2026-10 抓取）——Intermediary / Yarn / Mojang mappings 三套名字、Mojang 映射缺参数名与 Javadoc、Parchment 叠加、26.1 起不混淆、Loom `migrateMappings` 与 Ravel 工具。仓库来源：assets/skills/minecraft-forge-mod、minecraft-neoforge-mod、minecraft-fabric-mod 的 SKILL.md 与 references/api/。标 UNVERIFIED 的工具/结论写代码前以官方文档为准。
+> 核对日期：2026-10。外部来源（2026-10-21）：Fabric 官方「Migrating Mappings」页（https://docs.fabricmc.net/develop/porting/mappings/ ）——Intermediary / Yarn / Mojang mappings 三套名字、Mojang 映射缺参数名与 Javadoc、Parchment 叠加、26.1 起不混淆、Loom `migrateMappings` 与 Ravel 工具；minecraft.wiki 的版本页与 Pack_format 历史表。仓库来源：assets/skills/minecraft-forge-mod、minecraft-neoforge-mod、minecraft-fabric-mod 的 SKILL.md 与 references/api/。标了未核实原因的条目写代码前以官方文档为准。
 
 ## 1. 三代映射的关系
 
@@ -22,7 +22,7 @@
 | 运行时名 | SRG | SRG | official | Intermediary | official |
 | 发布前处理 | reobfJar | reobfJar | 无（official 直用） | remap（loom 负责） | 无 |
 
-> 「1.17+ 运行时 official 直用」是生态通行说法，本仓库未对 1.17+ 的 jar 逐个 `javap` 核对（UNVERIFIED 风险可控）：迁移前抽验一个类（如 `net.minecraft.world.item.Item`）即可确认名字形态。
+> 「1.17+ 运行时 official 直用」是生态通行说法，本仓库未做逐个 `javap` 抽样验证，风险可控但结论 UNVERIFIED（本仓库未对 1.17+ 产物 jar 逐个 javap，2026-10-21，待 CI/联网复核）：迁移前抽验一个类（如 `net.minecraft.world.item.Item`）即可确认名字形态。
 
 ### 读名字时的三个自问
 
@@ -39,10 +39,10 @@
 
 | 线 | 源码名从哪来 | 反编译 / 查看入口 | 备注 |
 | --- | --- | --- | --- |
-| 1.7.10 / 1.12.2 Forge | MCP 名（构建时生成） | FG 的生成源码任务；`javap -p -s`；老 javadoc（URL 以官方为准，UNVERIFIED） | 1.7.10 没有 `runClient/runServer`，用 `setupDevWorkspace` + `build`（见 assets/skills/minecraft-forge-mod/SKILL.md 第 6 节） |
-| 1.16.5 / 1.20.1 Forge | official 名（FG5/FG6 自动反编译） | IDEA 跳转；`javap` | 1.16.5 模板已是 official；老工程若残留 MCP 名会编译不过（1.16.5 是否仍可选 MCP 映射，UNVERIFIED） |
+| 1.7.10 / 1.12.2 Forge | MCP 名（构建时生成） | FG 的生成源码任务；`javap -p -s`；老 javadoc（URL 以官方为准；2026-10-21 本机无可达官方页覆盖，待 CI/联网复核） | 1.7.10 没有 `runClient/runServer`，用 `setupDevWorkspace` + `build`（见 assets/skills/minecraft-forge-mod/SKILL.md 第 6 节） |
+| 1.16.5 / 1.20.1 Forge | official 名（FG5/FG6 自动反编译） | IDEA 跳转；`javap` | 1.16.5 模板已是 official；老工程若残留 MCP 名会编译不过；1.16.5 仍可选 MCP 映射（已核实：docs.minecraftforge.net/en/1.16.x/gettingstarted 的 Migration to Mojang's Official Mappings，可回退 `mappings channel: 'snapshot', version: '20210309-1.16.5'`） |
 | 1.21.x / 26.x NeoForge | official 名（NeoForm 管线） | IDEA 跳转；`javap`；Mojang 官方名 | 21.x 可选 Parchment 补参数名（见 assets/skills/minecraft-neoforge-mod/SKILL.md:29） |
-| Fabric（≤1.21.11） | Yarn 或 official | loom 生成源码（`gradlew genSources`，任务名以 loom 文档为准，UNVERIFIED）；IDEA；`javap` | 模板用 official Mojang mappings（见 assets/skills/minecraft-fabric-mod/SKILL.md:28） |
+| Fabric（≤1.21.11） | Yarn 或 official | loom 生成源码（`gradlew genSources`，任务名以 loom 文档为准，UNVERIFIED（Fabric 文档正文为 JS 渲染，本机只取到标题，2026-10-21，待 CI/联网复核））；IDEA；`javap` | 模板用 official Mojang mappings（见 assets/skills/minecraft-fabric-mod/SKILL.md:28） |
 | 26.1+ | 官方名（无混淆） | 直接反编译 jar / IDEA | 不需要映射配置（Fabric 官方页，2026-10 抓取） |
 
 ## 3. 查询工具
@@ -51,11 +51,11 @@
 | --- | --- | --- |
 | IntelliJ IDEA + Gradle 导入 | 跳转、补全、重命名重构；最可靠的一手入口 | 通用，推荐 |
 | `javap -p -s` / `javap -c` | 看 class 的真实签名、描述符、字节码；核对「方法到底在不在」 | 通用，仓库内验证 API 也用它 |
-| Linkie | 在线映射查询（MCP / Yarn / mojmap 互查） | UNVERIFIED：本次未抓取，URL 与可用性以官方文档为准 |
+| Linkie | 在线映射查询（MCP / Yarn / mojmap 互查） | 已核实：2026-10-21 直接访问 https://linkie.shedaniel.dev/ 返回 200；具体可用性以站点为准 |
 | Parchment | 在 official 上叠加参数名 / Javadoc | 仓库已核实模板含 Parchment 块（neoforge SKILL.md:29）；具体版本号查官网 |
-| misode | 数据包 / 配方 / 模型 JSON 生成 | UNVERIFIED：本次未抓取 |
+| misode | 数据包 / 配方 / 模型 JSON 生成 | 已核实：2026-10-21 直接访问 https://misode.github.io/ 返回 200 |
 | Loom `migrateMappings` / Ravel（IntelliJ 插件） | Yarn → mojmap 批量迁移；Ravel 支持 Kotlin | Fabric 官方页已核实（2026-10 抓取） |
-| Minecraft Wiki 版本页 / 官方 primer | 逐版本破坏点清单与数据格式变更 | UNVERIFIED：本次未抓取，作为交叉验证来源 |
+| Minecraft Wiki 版本页 / 官方 primer | 逐版本破坏点清单与数据格式变更 | 已核实：2026-10-21 可直接抓取 minecraft.wiki 的版本页与 Pack_format 历史表，作为交叉验证来源 |
 
 ## 4. 批量改名工作流
 

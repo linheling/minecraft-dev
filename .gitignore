@@ -1,6 +1,8 @@
 # 依赖与产物
 node_modules/
 *.tgz
+# 构建冒烟生成的临时工程（scripts/smoke-build.mjs、smoke.yml）
+.smoke/
 
 # 过程性开发文档（本地留档即可，不进仓库）
 V0*_PLAN.md

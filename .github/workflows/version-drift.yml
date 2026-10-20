@@ -1,0 +1,42 @@
+name: Version drift
+
+# 上游版本矩阵巡检（只出报告，不自动升级）。`lib/versions.js` 是手工钉住的
+# 版本矩阵，这个 job 按周检查上游 Maven / metadata 是否已经领先，把差异打印到
+# 日志里，由人决定要不要更新矩阵。
+#
+# 默认非 strict：有 drift 时 job 仍然成功，方便观察趋势；手动触发时可以勾选
+# strict，让 drift 以退出码 1 失败（适合临时当作门禁）。
+#
+# 注意：maven.neoforged.net 在部分本机网络不可达，但 GitHub runner 可以访问；
+# 不可达的 host 在报告里记为 unreachable，不计入 drift，也不会让 job 失败。
+
+on:
+  schedule:
+    # 每周一 04:17 UTC
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      strict:
+        description: '有 drift 时让 job 失败（退出码 1）'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: version-drift
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: upstream drift check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Check upstream versions
+        run: node scripts/check-versions.mjs ${{ inputs.strict && '--strict' || '' }}

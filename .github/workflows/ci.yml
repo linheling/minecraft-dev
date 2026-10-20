@@ -1,9 +1,11 @@
 name: CI
 
 # The plugin has no runtime npm dependencies (peer-only, provided by the dsh
-# host), so CI never installs packages: it checks out, sets up Node, and runs
-# the scripts. Both shells matter: the test suite compares UTF-8 bytes, so a
-# Windows checkout with CRLF would fail — .gitattributes pins eol=lf.
+# host), so most jobs never install packages: they check out, set up Node, and
+# run the scripts. The one exception is `plugin-load`, which installs the
+# published peer packages to prove the entry points still import for real.
+# Both shells matter: the test suite compares UTF-8 bytes, so a Windows
+# checkout with CRLF would fail — .gitattributes pins eol=lf.
 
 on:
   push:
@@ -50,3 +52,25 @@ jobs:
       - name: coverage floor
         if: matrix.os == 'ubuntu-latest' && matrix.node == 24
         run: npm run test:coverage
+
+  plugin-load:
+    name: plugin load (published peer packages)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      # modules.test.js skips when the @deepseek-ai peer packages are absent, so
+      # a broken entry-point export could pass every other job. Install the
+      # published packages and run that file with the skip turned into a hard
+      # failure. --no-save/--no-package-lock keep the checkout clean.
+      - name: install peer packages
+        run: >
+          npm install --no-save --no-package-lock --legacy-peer-deps
+          @deepseek-ai/cordis@4.0.5
+          @deepseek-ai/dsh-tools@0.2.1-rc.2
+          @deepseek-ai/dsh-skill@0.2.1-rc.2
+          @deepseek-ai/schemastery@3.18.5
+      - run: REQUIRE_PLUGIN_DEPS=1 node --test test/modules.test.js

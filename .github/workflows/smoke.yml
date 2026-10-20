@@ -1,0 +1,127 @@
+name: Scaffold smoke build
+
+# Generated-artifact gate: scaffold a real project with lib/scaffold.js, then
+# build it with its own Gradle wrapper. Unit tests only inspect the rendered
+# files; this is the job that catches template/coordinate drift that a real
+# Gradle run rejects (missing dependency, wrong Java level, dead maven URL).
+#
+# Four representative lines, one per era:
+#   paper    1.21.8  JDK 21  (Gradle 8.14.3, Kotlin DSL + shadow)
+#   fabric   26.3    JDK 25  (Gradle 9.5.1, loom)
+#   neoforge 26.3    JDK 25  (Gradle 9.2.1, moddev/NeoForm)
+#   forge    1.12.2  JDK 8   (Gradle 4.9, ForgeGradle 3, MCP)
+#
+# Not wired to push/PR on purpose: each leg resolves a full Minecraft / mappings
+# toolchain and takes minutes, which is too heavy for every push to a plugin
+# repo. Weekly drift check plus manual dispatch before a release is the gate;
+# add a `pull_request` trigger here once the four legs are proven green.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 3 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: scaffold-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: ${{ matrix.platform }} ${{ matrix.mc }} (JDK ${{ matrix.java }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: paper
+            mc: '1.21.8'
+            java: '21'
+            dir: .smoke/paper-1.21.8
+            experimental: false
+          - platform: fabric
+            mc: '26.3'
+            java: '25'
+            dir: .smoke/fabric-26.3
+            experimental: false
+          - platform: neoforge
+            mc: '26.3'
+            java: '25'
+            dir: .smoke/neoforge-26.3
+            experimental: false
+          - platform: forge
+            mc: '1.12.2'
+            java: '8'
+            dir: .smoke/forge-1.12.2
+            # Gradle 4.9 is EOL and only runs on Java 8; the pair is the
+            # documented way to build 1.12.2 mods, and setup-java pins a real
+            # Temurin 8 below instead of relying on the runner default. Until a
+            # dispatched run proves this 2018-era toolchain on the current
+            # runner image, keep the leg advisory (visible red, non-blocking);
+            # flip `experimental` to false after the first green dispatch.
+            experimental: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      # Caches ~/.gradle (modules-2 + wrapper distributions) keyed per Gradle
+      # wrapper version, so the download cost is paid once per matrix leg.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Scaffold ${{ matrix.platform }} ${{ matrix.mc }}
+        run: >-
+          node scripts/smoke-build.mjs
+          --platform ${{ matrix.platform }}
+          --mc ${{ matrix.mc }}
+          --dir ${{ matrix.dir }}
+
+      # The scaffold writes files with fs.writeFile, which does not carry the
+      # template's executable bit, so the generated gradlew starts as 0644.
+      # A user's real project comes from a git checkout where git restores +x;
+      # chmod reproduces that before running the generated build.
+      - name: Build generated project
+        working-directory: ${{ matrix.dir }}
+        timeout-minutes: 30
+        run: |
+          chmod +x gradlew
+          ./gradlew build --no-daemon --stacktrace
+
+      - name: Dump Gradle daemon log on failure
+        if: failure()
+        run: |
+          for log in "$HOME"/.gradle/daemon/*/*.out.log; do
+            [ -f "$log" ] || continue
+            echo "::group::$log"
+            tail -n 300 "$log"
+            echo "::endgroup::"
+          done
+
+      - name: Upload build reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: smoke-${{ matrix.platform }}-${{ matrix.mc }}
+          path: |
+            ${{ matrix.dir }}/build/reports
+            ${{ matrix.dir }}/build/test-results
+            ${{ matrix.dir }}/build/*.log
+            ${{ matrix.dir }}/*.log
+          if-no-files-found: ignore
+          retention-days: 7

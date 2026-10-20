@@ -245,17 +245,22 @@ cp -r <minecraft-dev 仓库>/preset/minecraft ~/.dsh/.agent-presets/
 ## 开发
 
 ```sh
-npm run test         # node --test 单测（纯函数，无 dsh 依赖）
-npm run check:syntax # node --check 全量语法门禁
-npm run check-links  # 核对文档链接与 curse.maven projectId（联网；BROKEN=0 为通过）
+npm run test             # node --test 单测（纯函数，无 dsh 依赖）
+npm run check:syntax     # node --check 全量语法门禁
+npm run check-links      # 核对文档链接与 curse.maven projectId（联网；BROKEN=0 为通过）
+npm run check:versions   # 上游版本矩阵巡检（联网；默认只报告，--strict 时漂移才算失败）
+npm run check:unverified # 列出技能文档里还没核实的 UNVERIFIED 行
+npm run smoke:build      # 生成一个真实工程用于构建冒烟（之后自己进目录跑 gradlew build）
 ```
 
 ### 持续集成（GitHub Actions）
 
-本仓库没有 npm 运行时依赖（`@deepseek-ai/*` 全是 peerDependencies，由 dsh 宿主提供），所以 CI 不装包，只跑脚本：
+本仓库没有 npm 运行时依赖（`@deepseek-ai/*` 全是 peerDependencies，由 dsh 宿主提供），所以除 `plugin-load` 外 CI 不装包，只跑脚本：
 
-- `.github/workflows/ci.yml`：push 到 `master` / PR / 手动触发。`syntax` job 跑 `check:syntax`；`test` job 是 `ubuntu-latest` + `windows-latest` × Node 22/24 的四格矩阵跑 `npm test`，`ubuntu`×24 那格额外跑 `test:coverage`（阈值 80%）。
+- `.github/workflows/ci.yml`：push 到 `master` / PR / 手动触发。`syntax` job 跑 `check:syntax`；`test` job 是 `ubuntu-latest` + `windows-latest` × Node 22/24 的四格矩阵跑 `npm test`，`ubuntu`×24 那格额外跑 `test:coverage`（阈值 80%）；`plugin-load` job 用 `npm install --no-save` 装已发布的 `@deepseek-ai/*` peer 包，再以 `REQUIRE_PLUGIN_DEPS=1` 跑 `modules.test.js` —— 本地默认跳过缺依赖的模块测试，这个 job 把跳过变成硬失败。
 - `.github/workflows/doc-links.yml`：每周一 03:23 UTC + 手动触发，跑 `check-links`。外链超时/403 记 UNVERIFIABLE 不失败，404/410/5xx 或 curse.maven projectId 不符才是 BROKEN。
+- `.github/workflows/version-drift.yml`：每周一 04:17 UTC + 手动触发（可勾 strict），跑 `check:versions` 报告 `lib/versions.js` 与上游 metadata 的漂移；不可达 host 只记 unreachable，不算漂移。
+- `.github/workflows/smoke.yml`：每周一 03:17 UTC + 手动触发，用 `mc_scaffold` 生成 4 条代表线（paper 1.21.8 / fabric 26.3 / neoforge 26.3 / forge 1.12.2）并跑真实 `gradlew build`。forge 1.12.2 腿暂时 `experimental`（Gradle 4.9 + JDK 8 老工具链，首次 dispatch 转绿后转正）。
 - 测试会逐字节比对 UTF-8 文本，Windows 上若被 CRLF 改写会假失败——`.gitattributes` 已把文本钉成 `eol=lf`。
 
 ### npm 发布（用户已授权自动执行）
@@ -274,10 +279,10 @@ npm run check-links  # 核对文档链接与 curse.maven projectId（联网；BR
 ## Known Limitations and Deferred Work
 
 - API 参考为精选高频签名（非全量 Javadoc），每份标注核对日期；`npm run check-links` 校验 http(s) 链接与 curse.maven projectId（经 api.cfwidget.com；403 限流等归 UNVERIFIABLE），**fileId 仍须以 CurseForge 文件页「Curse Maven 代码」为准**。API 更新流程：改 references → `npm run check-links` → 人工复核 UNVERIFIABLE 项。
-- `mc_gradle` 依赖目标机存在 taskkill（win32）；输出截断为头尾内联标记，不做 spill 文件。
+- `mc_gradle` 结束进程树时 win32 优先用 `taskkill /PID <pid> /T /F`；taskkill 缺失或返回失败时回退到 `process.kill(pid, 'SIGKILL')` 只杀根进程（Windows 没有负 pid 组信号，孙进程可能残留），属尽力而为。输出截断为头尾内联标记，不做 spill 文件。
 - 用户本地同名技能（`~/.dsh/skills/` 等，rank 低于 600）会覆盖本包 bundled 技能——预期行为，冲突时删本地同名目录。
-- 版本信息以 2026-09 为准；26.x 生态仍在快速变化（**Paper 26.3 只有 `-alpha` 构建、NeoForge 26.3 只有 `-beta`**，26.2 两边都已 stable）。
-- **26.3 已真机构建验证，但生态仍是 alpha/beta 期**：2026-09 实跑四组构建全部成功 —— paper 26.2（对照，13s）、paper 26.3（8s，`26.3.build.+` 命中上游 `-alpha` 构建）、fabric 26.3（23s）、neoforge 26.3（6m43s，NeoForge `26.3.0.12-beta` + moddev 2.0.147）。但 **Paper 26.3 目前只有 `-alpha` 构建、NeoForge 26.3 只有 `-beta`**，生产使用前请自行评估；26.2 两边都已 stable。
+- 版本信息以 2026-10 为准；26.x 生态仍在快速变化（**Paper 26.3 已有 `-stable` 构建、NeoForge 26.3 只有 `-beta`**，26.2 两边都已 stable）。
+- **26.3 已真机构建验证，但生态仍是 alpha/beta 期**：2026-09 实跑四组构建全部成功 —— paper 26.2（对照，13s）、paper 26.3（8s，`26.3.build.+` 当时命中上游 `-alpha` 构建；2026-10 起已解析到 `26.3.build.207-stable`）、fabric 26.3（23s）、neoforge 26.3（6m43s，NeoForge `26.3.0.12-beta` + moddev 2.0.147）。但 **NeoForge 26.3 仍只有 `-beta`**（Paper 26.3 已有 `-stable` 构建），生产使用前请自行评估；26.2 两边都已 stable。
 - **fabric 模板的 toolchain 修复（v0.9.0）**：两个 fabric 模板此前缺 foojay 解析器与 `java.toolchain`，只写 `options.release` + source/targetCompatibility —— 环境 JDK 低于目标时（本机默认 Java 22、26.x 线目标 25）直接报「不支持发行版本 25」且无法自举。现在与 paper/neoforge 一致：`settings.gradle` 带 `org.gradle.toolchains.foojay-resolver-convention:1.0.0`，`build.gradle` 用 `java { toolchain { languageVersion = JavaLanguageVersion.of(N) } }`，由 foojay 自动 provision。**这是 fabric（含 1.20/1.21 线）长期存在的缺陷，本次因真机构建才暴露。**
 - 市场类型判定：preset 文件（`preset.yml` + `agent.cordis.yml`）必须放在仓库的 `preset/minecraft/` 子目录——放仓库根目录会把市场类型从 cordis-plugin 误判为 agent-preset。
 - preset 人设为 2026-09 基线；26.x 生态（NeoForge 26.3 beta）变化时以技能 references 更新为准。
@@ -297,3 +302,4 @@ npm run check-links  # 核对文档链接与 curse.maven projectId（联网；BR
 - `mc_codex` 的 `mode: "app-server"` 走官方 `codex app-server --stdio`（NDJSON JSON-RPC：`initialize` → `initialized` → `thread/start` → `turn/start` → `turn/completed`），**不经过 shell**，所以卡片上的命令是 `"…codex.exe" app-server --stdio`，实际交互是协议而非命令行；prompt 仍然原样放进 `turn/start` 的一个 text input，内容就是 `.dsh/codex-architect.md`。`mode: "exec"` 则走 `cmd.exe /d /s /c` + stdin 重定向（POSIX 走 `/bin/sh -c`）：卡片显示的命令**就是**实际执行的命令。两种模式下 Codex 自身报错（鉴权/额度/网络）都会原样回显，不做归类改写。
 - **app-server 模式的两条协议细节（实测，0.155.0-alpha.9.2）**：① `turn/completed` **不带** usage，token 总量只能从 rollout 的 `event_msg`/`token_count`/`info.total_token_usage.total_tokens` 读，所以 `mc_codex` 会自己去读那个文件的尾部；② 线程的 `source` 由 app-server 协议决定（实测为 `vscode`，`originator` = 客户端名 `DeepSeek Harness`），**不能用参数指定**（`sessionStartSource` 只接受 `startup`/`clear`，`codex exec resume --thread-source vscode` 也不会改已有线程的 source）。
 - **CLI 会话不进 Codex 桌面版列表（实测）**：`codex exec` 线程在 `state_5.sqlite` 里是 `source='exec'`、`has_user_event=0`，而桌面版侧边栏的 `thread/list` 带固定 `sourceKinds` 白名单（只含 `vscode`/`appServer` 一类），所以 App 里找不到；这也是 `mc_codex` 默认改用 app-server 模式的原因——该模式下线程是 `source='vscode'`，实测跑完立刻出现在默认 `thread/list` 结果里。`mode: "exec"` 时仍额外回报 `rolloutPath`，续接用 `codex exec resume <id> "…"`。
+- **本机全局 `~/.gradle/init.gradle` 可能让生成工程「假死」**：若它把不可达仓库（例如部分网络下的 `maven.neoforged.net`）插到 repository / pluginManagement 列表最前，任何工程的首次构建都会卡在插件 marker 的 HEAD 请求。生成物自身的仓库只有 gradlePluginPortal + 平台仓库。排查：临时禁用该 init 文件，或用隔离的 `GRADLE_USER_HOME`（CI 是干净环境，不受影响）。

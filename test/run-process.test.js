@@ -171,3 +171,38 @@ test('killTree is a no-op for a non-positive pid and signals the group on posix'
   killTree('linux', 123, { processKillImpl: (pid, signal) => calls.push([pid, signal]) })
   assert.deepEqual(calls, [[-123, 'SIGTERM']])
 })
+
+test('killTree falls back to a root-only SIGKILL when win32 taskkill cannot kill the tree', () => {
+  const killed = []
+  // Missing taskkill binary: spawnSync resolves with `error` instead of throwing.
+  killTree('win32', 4242, {
+    spawnSyncImpl: () => ({ error: Object.assign(new Error('spawn taskkill ENOENT'), { code: 'ENOENT' }), status: null }),
+    processKillImpl: (pid, signal) => killed.push([pid, signal]),
+  })
+  assert.deepEqual(killed, [[4242, 'SIGKILL']])
+
+  // taskkill itself throws (EPERM in a locked-down environment).
+  const thrown = []
+  killTree('win32', 7, {
+    spawnSyncImpl: () => { throw new Error('spawn EPERM') },
+    processKillImpl: (...args) => thrown.push(args),
+  })
+  assert.deepEqual(thrown, [[7, 'SIGKILL']])
+
+  // taskkill ran but reported a failure (access denied, process gone).
+  const failed = []
+  killTree('win32', 10, {
+    spawnSyncImpl: () => ({ status: 128, error: undefined }),
+    processKillImpl: (...args) => failed.push(args),
+  })
+  assert.deepEqual(failed, [[10, 'SIGKILL']])
+})
+
+test('killTree does not fall back when win32 taskkill succeeds', () => {
+  const killed = []
+  killTree('win32', 9, {
+    spawnSyncImpl: () => ({ status: 0, error: undefined }),
+    processKillImpl: (...args) => killed.push(args),
+  })
+  assert.deepEqual(killed, [])
+})
