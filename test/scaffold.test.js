@@ -28,7 +28,14 @@ async function scaffoldPlatform(platform, minecraftVersion) {
   assert.equal(result.minecraftVersion, minecraftVersion)
   assert.equal(result.wrapperReady, true)
   assert.ok(result.filesCreated.length >= 7, `filesCreated=${result.filesCreated.length}`)
-  assert.equal(result.buildCommand, 'gradlew.bat build')
+  // Platform-aware: CI runs this suite on Linux and Windows runners, and the
+  // scaffold hands out the host-appropriate command (`./gradlew` vs
+  // `gradlew.bat`). Asserting the Windows command unconditionally made every
+  // Linux job red the first time CI ran.
+  assert.equal(
+    result.buildCommand,
+    process.platform === 'win32' ? 'gradlew.bat build' : './gradlew build',
+  )
 
   // Main class lands on the rendered package path with the right package line.
   const mainPath = 'src/main/java/com/example/myplugin/MyPlugin.java'
