@@ -88,9 +88,18 @@ Paper 1.19+ 支持用 Brigadier 注册带参数类型的命令（ArgumentType �
 
 ```java
 getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
-    Commands commands = event.registrar().getDispatcher();
-    commands.register(...);
+    // event 是 ReloadableRegistrarEvent<Commands>：event.registrar() 本身就是 Commands。
+    Commands commands = event.registrar();
+    commands.register(
+        Commands.literal("hello")
+            .executes(ctx -> {
+                ctx.getSource().getSender().sendPlainMessage("hi");
+                return Command.SINGLE_SUCCESS;
+            })
+            .build(),
+        "示例命令",          // Bukkit 帮助描述
+        List.of("hi"));      // 别名
 });
 ```
 
-细节较复杂，需要时用 web 工具查 docs.papermc.io 的 Brigadier 章节；普通插件用 CommandExecutor 已足够。
+需要 `io.papermc.paper.command.brigadier.Commands`、`com.mojang.brigadier.Command` 等 import。`Commands#getDispatcher()` 存在但属 delicate API（返回的是 `CommandDispatcher<CommandSourceStack>`，不是 `Commands`），注册请走 `register(...)`。细节见 docs.papermc.io 的 Brigadier 章节；普通插件用 CommandExecutor 已足够。

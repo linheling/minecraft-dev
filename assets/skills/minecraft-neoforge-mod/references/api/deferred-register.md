@@ -30,7 +30,7 @@ public MyPlugin(IEventBus modEventBus) {
 public <I extends T> DeferredHolder<Registry<T>, I> register(String name, Supplier<? extends I> supplier)
 ```
 
-- 返回类型 21.x 为 `DeferredHolder<Registry<T>, I>`（`net.neoforged.neoforge.registries.DeferredHolder`）；**1.20.1（legacyforge 线）同名 API 返回 `RegistryObject<T>`**（`net.neoforged.neoforge.registries.RegistryObject`，20.6 起更名）。
+- 返回类型 21.x 为 `DeferredHolder<Registry<T>, I>`（`net.neoforged.neoforge.registries.DeferredHolder`）；1.20.1（legacyforge 线）仍是 `RegistryObject<T>`（`net.neoforged.neoforge.registries.RegistryObject`，到 1.20.6 已改成 `DeferredHolder`）。注意它与 Forge 侧的 `net.minecraftforge.registries.RegistryObject` 是两个不同的类，跨平台抄代码会编译不过；引用前按目标版本查 javadoc 确认。
 - 常用方法：`T get()`（惰性解析注册项，首次访问才查注册表）、`getId()` : ResourceLocation（模组资源定位 `name` 处传短名，如 `"my_item"`）。
 
 ```java

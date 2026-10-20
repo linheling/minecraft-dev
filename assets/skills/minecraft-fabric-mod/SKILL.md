@@ -24,7 +24,7 @@
 - 26.3 侧 Fabric 已就绪且**已真机构建通过**（2026-09）：26.3 在 meta.fabricmc.net 标记为 stable，loader 0.19.5 为当前 stable；Architectury 移植指南声明其 26.3 最低目标为 Fabric API **0.160.5**，maven 上已出到 `0.161.0+26.3`（逐日发版，写代码前查 metadata）。
 - ⚠️ **loom 留在 1.17 线是刻意的**：maven 上 loom 最新 stable 是 `1.18.2`，但它要求 **Gradle 自身运行在 Java 25** 上——实测在 Java 22 环境报 `Dependency requires at least JVM runtime version 25. This build uses a Java 22 JVM`，构建直接失败。用 `1.17.21` 则同一环境构建成功（2026-09 实测）。只有在确定用户会用 JDK 25 启动 Gradle 时才升 1.18.x。
 - ⚠️ **fabric 模板的 Java 目标走 toolchain**（v0.9.0 起）：`settings.gradle` 声明 `org.gradle.toolchains.foojay-resolver-convention:1.0.0`，`build.gradle` 用 `java { toolchain { languageVersion = JavaLanguageVersion.of(N) } }`。**不要**改回 `options.release` + source/targetCompatibility：环境 JDK 低于目标时（如环境 22、目标 25）那条路会报「不支持发行版本 25」且无法自举。旧版模板缺这个声明，属已修缺陷。
-- 26.3 的移植变更（Architectury API 21.1 → 22：`LootEvent`、扩展菜单、`BlockTransformerHooks`、`FuelRegistry`、`BiomeHooks`）见 minecraft-neoforge-mod 技能的 `references/api/changes-26.3.md`。**Fabric 核心 API 的 26.3 变更清单本技能未核对**——以 Fabric 官方文档/博客与该版本 changelog 为准，别按记忆写。
+- 26.3 的移植变更（Architectury API 21.1 → 22：`LootEvent`、扩展菜单、`BlockTransformerHooks`、`FuelRegistry`、`BiomeHooks`）见 `assets/skills/minecraft-neoforge-mod/references/api/changes-26.3.md`（跨技能，写全路径便于定位）。**Fabric 核心 API 的 26.3 变更清单本技能未核对**——以 Fabric 官方文档/博客与该版本 changelog 为准，别按记忆写。
 - **映射**：1.20.1 / 1.21.11 用 `mappings loom.officialMojangMappings()`（mojmap）；**26.x 不写映射行**（26.1 起无混淆）。yarn 在 1.x 时代存在但本技能不用，26.x 无 yarn。
 - **构建插件 id**：1.20.1 / 1.21.11（混淆时代）用 `net.fabricmc.fabric-loom-remap`；26.x（无混淆）用原生 `net.fabricmc.fabric-loom`。
 - 坐标查询：版本总览 https://fabricmc.net/develop ；全版本数据 https://meta.fabricmc.net/v2/versions/loader 、`/versions/game`（确认 26.3 为 stable、快照线为 26.4-snapshot-1）、`/versions/yarn`（可确认 26.x yarn 条目为 0）、maven 元数据 https://maven.fabricmc.net/ 。
@@ -45,7 +45,7 @@
     └── resources/fabric.mod.json   # 模组元数据
 ```
 
-- `build.gradle` 要点：`plugins { id 'net.fabricmc.fabric-loom-remap' version "{{loomVersion}}"; id 'maven-publish' }`；依赖 `minecraft "com.mojang:minecraft:…"` + `mappings loom.officialMojangMappings()`（26.x 无此行）+ `modImplementation "net.fabricmc:fabric-loader:…"` + `modImplementation "net.fabricmc.fabric-api:fabric-api:…"`（**26.x 用 `implementation`**）；`processResources` 对 fabric.mod.json 做 `expand "version": version`；`options.release = <Java 级别>`。**不写 repositories 块**（loom 自动加 Fabric maven）。
+- `build.gradle` 要点：`plugins { id 'net.fabricmc.fabric-loom-remap' version "{{loomVersion}}"; id 'maven-publish' }`；依赖 `minecraft "com.mojang:minecraft:…"` + `mappings loom.officialMojangMappings()`（26.x 无此行）+ `modImplementation "net.fabricmc:fabric-loader:…"` + `modImplementation "net.fabricmc.fabric-api:fabric-api:…"`（**26.x 用 `implementation`**）；`processResources` 对 fabric.mod.json 做 `expand "version": version`；Java 目标用 `java { toolchain { languageVersion = JavaLanguageVersion.of(<Java 级别>) } }`，**不要**改回 `options.release`（理由见第 2 节）。**不写 repositories 块**（loom 自动加 Fabric maven）。
 - **client source set**（进阶，模板默认不开）：需要把客户端代码与服务端代码物理分开时加
   ```gradle
   loom {

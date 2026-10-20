@@ -49,7 +49,7 @@ task.runTaskTimer(plugin, long delay, long period);
 
 // 批量管理
 Bukkit.getScheduler().cancelTasks(plugin);      // 取消插件全部任务
-Bukkit.getScheduler().isPrimaryThread();        // 当前是否主线程（1.21 正式名）
+Bukkit.isPrimaryThread();                       // 当前是否主线程（Bukkit 静态方法，不在 Scheduler 上）
 ```
 
 ## 3. 主线程铁律

@@ -45,7 +45,7 @@ const SKILLS = [
   },
   {
     name: 'minecraft-major-mods',
-    description: 'Reference for addon development against major mods on the legacy lines: Thaumcraft, Tinkers Construct, Botania, Twilight Forest, Applied Energistics 2, Mekanism, IndustrialCraft 2, Thermal Expansion, Draconic Evolution and SlashBlade for Minecraft 1.7.10 and 1.12.2. Covers the general addon patterns: soft-dependency detection across Forge/Cauldron/Spigot, compileOnly optional dependencies, curse.maven and Modrinth maven coordinates per mod, and recipe/event integration hooks. Per-mod coordinates and API entry points live in references/api/mods-1.7.10.md and mods-1.12.2.md. Use when developing an addon for one of these mods.',
+    description: 'Reference for addon development against major mods across the legacy and modern lines: Thaumcraft, Tinkers Construct, Botania, Twilight Forest, Applied Energistics 2, Mekanism, IndustrialCraft 2, Thermal Expansion, Draconic Evolution and SlashBlade on Minecraft 1.7.10 / 1.12.2, plus Create, Botania, AE2, Mekanism, Ars Nouveau, Farmer\'s Delight, Curios, JEI, REI and Patchouli on 1.20.1 Forge and 1.21.x / 26.x NeoForge. Covers the general addon patterns: soft-dependency detection across Forge/Cauldron/Spigot/NeoForge, compileOnly optional dependencies, curse.maven and Modrinth maven coordinates per mod, and recipe/event integration hooks. Per-mod coordinates and API entry points live in references/api/mods-1.7.10.md, mods-1.12.2.md and mods-modern.md. Use when developing an addon for one of these mods on any version line.',
   },
   {
     name: 'minecraft-intake',

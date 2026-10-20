@@ -28,10 +28,10 @@ Minecraft 开发插件 for [DeepSeek Harness](https://github.com/deepseek-ai/dee
 | 技能 | 内容 |
 |---|---|
 | `minecraft-java-build` | 全时代 Java/Gradle 构建知识：JDK 配对表、wrapper、foojay toolchain、依赖仓库、常见坑 |
-| `minecraft-paper-plugin` | Paper/Spigot 现代线插件（1.20.x / 1.21.x / 26.x）+ 5 份 API 参考 |
+| `minecraft-paper-plugin` | Paper/Spigot 现代线插件（1.20.x / 1.21.x / 26.x）+ 6 份 API 参考 |
 | `minecraft-fabric-mod` | Fabric 模组（loom/loader/fabric-api/yarn 配合）+ 4 份 API 参考 |
-| `minecraft-forge-mod` | 传统 Forge 四时代（1.7.10 FG2 / 1.12.2 FG3 / 1.16.5 FG5 / 1.20.1 FG6）+ 3 份时代 API 参考 |
-| `minecraft-neoforge-mod` | NeoForge（1.20.1 legacyforge / **1.21.1** / 1.21.x / 26.2 stable + **26.3 beta-only**）+ 3 份 API 参考 |
+| `minecraft-forge-mod` | 传统 Forge 四时代（1.7.10 FG1.2 fork / 1.12.2 FG3 / 1.16.5 FG5 / 1.20.1 FG6）+ 3 份时代 API 参考 |
+| `minecraft-neoforge-mod` | NeoForge（1.20.1 legacyforge / **1.21.1** / 1.21.x / 26.2 stable + **26.3 beta-only**）+ 4 份 API 参考 |
 | `minecraft-spigot-legacy` | 1.7.10 / 1.12.2 老线 Bukkit 插件 + Cauldron/Thermos/Mohist 混合服说明 + 2 份老线 API 参考 |
 | `minecraft-major-mods` | 大型模组附属开发：28 个模组条目（1.7.10×10 / 1.12.2×8 / 现代×10，含拔刀剑、神秘时代、匠魂、植物魔法、Create、Botania、AE2、Mekanism、Curios、JEI/REI 等），每条含核实过的 curse.maven 坐标与扩展点 |
 | `minecraft-intake` | **任务信息核对（v0.7）**：用户请求写插件/mod/附属但信息不足时，按场景批量提问（版本/平台/加载器/核心/混合端/兼容性/部署），一次问全、不重复问、授权默认 |
@@ -173,7 +173,7 @@ cp -r <minecraft-dev 仓库>/preset/minecraft ~/.dsh/.agent-presets/
 - 发现是**热扫描**：运行中的 dsh 无需重启即可看到新 preset；但**新会话**才生效。
 - Windows 用户：可用 PowerShell `Copy-Item -Recurse` 等价命令。
 - 切换位置：Web UI **新建会话**的 preset 选择器选「Minecraft 专家」。
-- 验证：新建会话选该 preset，问「列出你能用的技能」，应返回 8 个 minecraft-* 技能 + mc_scaffold/mc_gradle + 4 个内置子代理 subagent_mc_* + subagent/subagent_fork/tool-workflow/ralph 工具；问「你是什么模型、工作目录在哪」，应回答本会话模型与目录（`{{model}}` / `{{cwd}}` 解析）。
+- 验证：新建会话选该 preset，问「列出你能用的技能」，应返回 8 个 minecraft-* 技能 + mc_scaffold/mc_gradle + 4 个内置子代理 subagent_mc_* + subagent/subagent_fork/tool-workflow/ralph 工具；问「你是什么模型、工作目录在哪」，应回答本会话模型（`{{model}}` 解析）并**调用 shell 打印当前目录**——dsh 0.2.1 起没有 `{{cwd}}` 这个变量，写它会让首轮直接失败。
 
 ## 使用
 

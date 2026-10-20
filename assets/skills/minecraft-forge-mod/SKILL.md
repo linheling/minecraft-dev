@@ -77,7 +77,7 @@ pack.mcmeta：1.16.5 为 pack_format 6、1.20.1 为 15（模板已配）。
 
 ## 6. 构建 / 测试
 
-- 构建：`gradlew.bat build`（Windows）/ `./gradlew build`；产物 `build/libs/{{name}}-0.1.0.jar`（reobf 后），拖入客户端或服务器 `mods/` 目录。
+- 构建：`gradlew.bat build`（Windows）/ `./gradlew build`；产物 `build/libs/<modid>-0.1.0.jar`（reobf 后），拖入客户端或服务器 `mods/` 目录。
 - 运行任务按时代：
   - 1.7.10：**无 runClient/runServer**。可用 `gradlew setupDevWorkspace` 或 IDE（IntelliJ：`genIntellijRuns` 不适用于 FG1.x，用 FG 的 eclipse/idea 任务；不确定查官方 MDK 说明），最简单是直接把产物 jar 放进 `mods/` 启动游戏测试。
   - 1.12.2+：`gradlew runClient` / `gradlew runServer`（首次启动反编译/下载慢，给足超时，R9）。
@@ -87,7 +87,7 @@ pack.mcmeta：1.16.5 为 pack_format 6、1.20.1 为 15（模板已配）。
 
 ## 7. 常见坑
 
-1. **JDK 与 Gradle 配对（第一大坑）**：Gradle 4.9 只能 Java 8~10；7.3.3/7.4.2 只能 ≤18；用现代 JDK 跑老 wrapper 直接失败（"Unsupported class file major version" 或 Gradle 直接退出）。老线先 `java -version` 确认，再设 `JAVA_HOME` 指向 JDK 8。
+1. **JDK 与 Gradle 配对（第一大坑）**：Gradle 4.9 只能 Java 8~10；7.3.3/7.4.2 只能 ≤17（Gradle 7.5 起才支持 Java 18）；用现代 JDK 跑老 wrapper 直接失败（"Unsupported class file major version" 或 Gradle 直接退出）。老线先 `java -version` 确认，再设 `JAVA_HOME` 指向 JDK 8。
 2. **FG 与 Gradle 版本严格绑定**：ForgeGradle 1.2 fork↔7.4.2、3.x↔4.9、5.x↔7.3.3、6.x↔8.8，这是官方 MDK 钉选，换 wrapper 前先查表；FG 版本不能随便升级（FG3 的 `3.+` 会被 3.0.197 之后的 SNAPSHOT 破坏）。
 3. **mappings 与 MC 不匹配**：1.12.2 的 snapshot 必须对应 1.12.2（20171003-1.12）；1.16.5/1.20.1 的 official 映射版本号必须等于 MC 版本。写错会在反编译/启动阶段崩溃（类找不到、方法签名错误）。
 4. **reobfJar 产物别用 dev 版本上传**：本地 runClient 能跑的 jar 不 reobf 直接发出去，客户端加载即崩（NoSuchMethodError）。1.12.2+ 检查 build.gradle 有 `jar.finalizedBy('reobfJar')`。
@@ -100,5 +100,5 @@ pack.mcmeta：1.16.5 为 pack_format 6、1.20.1 为 15（模板已配）。
 
 ## 8. 开工前核对（intake）
 
-- 必问：**时代**（1.7.10→FG2+wrapper 7.4.2 / 1.12.2→FG3+4.9 / 1.16.5→FG5+7.3.3 / 1.20.1→FG6+8.8）、Forge 版本、**是否混合服**（Cauldron/Mohist/CatServer——事件侧漏与 NMS 差异）。
+- 必问：**时代**（1.7.10→FG1.2 fork（anatawa12）+wrapper 7.4.2 / 1.12.2→FG3+4.9 / 1.16.5→FG5+7.3.3 / 1.20.1→FG6+8.8）、Forge 版本、**是否混合服**（Cauldron/Mohist/CatServer——事件侧漏与 NMS 差异）。
 - 时代决定构建链，**必问不猜**；用户信息不足先批量提问（minecraft-intake）。

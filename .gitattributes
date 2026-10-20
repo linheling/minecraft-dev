@@ -1,0 +1,10 @@
+# 仓库内文本统一用 LF 落盘：部分测试做逐字节比对（preset-rows-parity /
+# preset-registration / persona-variables），Windows 默认 core.autocrlf=true
+# 会让这些用例在干净克隆上假失败。
+* text=auto eol=lf
+
+# 二进制资源不参与换行转换
+*.jar binary
+*.png binary
+*.ico binary
+*.zip binary

@@ -43,6 +43,10 @@ dependencies {
 // mods.toml / pack.mcmeta 里的 ${mod_id} 等由 Gradle expand 替换（与 scaffold 的 {{}} 不冲突）。
 def replaceProperties = [
     minecraft_version: "{{mcVersion}}", forge_version: "{{forgeVersion}}",
+    // mods.toml 的 [[dependencies]] 段用这三个区间；漏了 expand 会抛 MissingPropertyException。
+    minecraft_version_range: minecraft_version_range,
+    forge_version_range: forge_version_range,
+    loader_version_range: loader_version_range,
     mod_id: "{{name}}", mod_name: mod_name, mod_license: mod_license,
     mod_version: mod_version, mod_authors: mod_authors, mod_description: mod_description,
 ]

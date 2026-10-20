@@ -23,7 +23,7 @@
 | 新插件（Bukkit 系） | MC 版本、核心（Paper/Spigot/Purpur/Pufferfish/**Folia**）、功能需求 | Paper + 1.21.x 最新稳定线 |
 | 老线插件 | 1.7.10 or 1.12.2、**混合服核心**（KCauldron/Thermos/Mohist/CatServer）、JDK8 环境 | 1.12.2 + 纯 Spigot |
 | 新 mod | 加载器（Forge/Fabric/NeoForge）、MC 版本、加载器版本 | NeoForge 或 Fabric + 最新稳定线 |
-| 老线 mod | 时代（FG2/3/5 决定 wrapper）、Forge 版本、**是否混合服** | 按时代钉选 |
+| 老线 mod | 时代（1.7.10 = FG1.2 fork / 1.12.2 = FG3 / 1.16.5 = FG5，决定 wrapper）、Forge 版本、**是否混合服** | 按时代钉选 |
 | 附属 addon | 目标模组 + MC 版本 + 模组版本、扩展点 | 目标模组最新版本 |
 | 资源包（pack） | 目标 MC 版本、**包类型**、**客户端前端**（OptiFine/citresewn/原版）、分版、服务端侧（自定义物品/改名） | 26.2 + citresewn（**26.3 没有 CIT 前端**——Modrinth 上 cit-resewn-continuation / cit-resewn-fork 最高只到 26.2，2026-09 实测；纯原版包才可 26.3） |
 | 跨服/群组 | BungeeCord/Velocity、是否 Folia | 单服 |
