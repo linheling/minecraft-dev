@@ -23,7 +23,9 @@ neoForge {
     }
 }
 
-// TODO: generateModMetadata 把 ${mod_id} 等展开进 META-INF/neoforge.mods.toml。
+// 只展开 neoforge.mods.toml：expand 会求值资源里任何字面的 ${...}，白名单避免误伤。
 processResources {
-    expand project.properties
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand project.properties
+    }
 }

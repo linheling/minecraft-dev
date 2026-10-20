@@ -86,6 +86,6 @@ if (player.getWorld().getName().equals("world_nether")) { ... }
 
 ## 注意
 
-- 大量方块修改（>几千）考虑用 `PaperChunkAccess` 或分帧处理，避免主线程卡顿。
+- 大量方块修改（>几千）要分帧处理（每 tick 限量，例如每 tick 200–500 块），避免卡主线程；Paper 没有可直接调用的区块级批量写 API。
 - `Sound` 枚举名在版本间有变动（如 `ENTITY_EXPERIENCE_ORB_PICKUP`）；拿不准时查 javadoc。
 - 异步任务禁止调用本节任何方法（见 scheduler-and-config.md 主线程铁律）。

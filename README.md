@@ -6,6 +6,18 @@ Minecraft 开发插件 for [DeepSeek Harness](https://github.com/deepseek-ai/dee
 
 已被 [awesome-dsh-plugin](https://awesome-dsh-plugin.com) 收录（`Skills` 分类）。
 
+### English TL;DR
+
+Minecraft development plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`): **9 model-loaded skills + 4 tools** covering MC **1.7.10 – 26.3** on **Paper/Spigot**, **Fabric**, **Forge** and **NeoForge**.
+
+- `mc_scaffold` — generate a buildable project in 19 pinned platform/version combinations (Gradle wrapper, toolchain and metadata included).
+- `mc_gradle` — run `gradlew <task>` with a terminal card, timeout tree-kill and head/tail output.
+- `mc_port_audit` — read-only audit of an existing project against a target platform/version (Gradle, Java, metadata ranges, removed APIs → blocker/warning/info).
+- `mc_codex` — architect-preset-only bridge to the user's own Codex CLI, with a fully visible session.
+- `minecraft-porting` skill — regenerate-skeleton porting workflow, version-family breakpoints, API renames and a Forge → NeoForge guide.
+
+Tests: `npm test` (191 cases; Node 22.19+ / 24), syntax gate: `npm run check:syntax`, link check: `npm run check-links`.
+
 > ⚠️ **dsh 0.2.1 把子代理的 `persona` / `toolFilter` 删了**（`@deepseek-ai/dsh-tool-subagent`）：这两个键现在会**直接抛错** —— *"no longer supported; configure persona and tool plugins in an Agent Preset and select it with agentPreset (spawn only)"*；`backgroundMode` / `enableRunInBackground` 也一并消失（写了不报错，但完全不生效）。因此自 **v0.10.0** 起，A–D 四个角色的"人设 + 工具范围"改为 4 个 Agent Preset（`mc-plan` / `mc-skeleton` / `mc-content` / `mc-verify`，见 `preset/roles.js`），宿主层的 4 行只剩 `provider` / `toolName` / `agentPreset` / `maxDepth`。同时 0.2.1 的委派**一律异步**：调用立即返回 id、完成时通知，角色人设里已写明结果要放在最后一条消息里。
 >
 > 兼容性：`agentPreset` 在 **≤ 0.2.0** 上会被静默忽略（schemastery 保留未知键、旧版工具也不读它），所以同一份配置在旧版本上仍然挂载成功，只是那 4 个子代理不带角色人设 —— 旧版本用户可直接选择对应的 preset 来获得角色。详见 `test/subagent-rows.test.js`。

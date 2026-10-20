@@ -43,7 +43,7 @@ Bukkit.getGlobalRegionScheduler().runDelayed(plugin, task -> {
 
 // 在某个位置所在区域执行（替代 runTask 但绑定区域）
 Bukkit.getRegionScheduler().run(plugin, location, task -> {
-    world.setBlockState(...); // 该区域的方块操作安全
+    location.getBlock().setType(Material.STONE); // 该区域的方块操作安全
 });
 
 // 异步（替代 runTaskAsynchronously）
@@ -58,12 +58,13 @@ Bukkit.getAsyncScheduler().runNow(plugin, task -> {
 ## 5. 区域线程规则（写代码时的心智模型）
 
 - 每个区域一个线程：**只能安全操作当前区域线程拥有的实体/方块**；跨区域碰别人区域的实体 = 数据竞争/崩溃。
-- 不要持有实体引用跨 tick 使用（区域可能卸载/迁移）；需要持久数据用 `RegionizedData`（实体/方块附加数据，自动按区域隔离）：
+- 不要持有实体引用跨 tick 使用（区域可能卸载/迁移）；需要持久数据挂实例上，用 Bukkit 的 `getPersistentDataContainer()`（PDC 随实体迁移，不需要额外 API）：
   ```java
-  import io.papermc.paper.threadedregions.RegionizedData;
-  RegionizedData<MyData> data = entity.getOrCreatePersistentData(...); // 语义：区域隔离的插件数据
+  PersistentDataContainer pdc = entity.getPersistentDataContainer();
+  pdc.set(key, PersistentDataType.STRING, "value");
   ```
-- 世界级操作（如全服广播、全局变量）放全局区域调度器；区块加载用 `ChunkLoadRequest`/异步预加载（Folia 无同步 chunk 加载保证）。
+  Folia **没有**「按区域隔离的附加数据」专用类；需要跨区域共享的状态请放全局调度器里改普通字段，并自己保证可见性（`volatile`/并发容器），不要从区域线程直接改全局集合。
+- 世界级操作（如全服广播、全局变量）放全局区域调度器；区块加载用 `world.getChunkAtAsync(x, z)` 异步预加载（Folia 不保证同步 chunk 加载）。
 - 事件监听器：绝大多数 Bukkit 事件在 Folia 上照常触发，但事件抛出的线程是**所在区域线程**——监听器里直接改世界安全（同区域），跨区域逻辑要小心。
 
 ## 6. 运行时检测（一 jar 兼容两端的写法）

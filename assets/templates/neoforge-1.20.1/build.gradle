@@ -27,7 +27,10 @@ legacyForge {
     }
 }
 
-// TODO: generateModMetadata 把 ${mod_id} 等展开进 META-INF/mods.toml 与 pack.mcmeta。
+// 只展开元数据文件：processResources 的 expand 会把资源里任何字面的 ${...}
+// 当作表达式求值，所以用一个显白名单，其它资源原样复制。
 processResources {
-    expand project.properties
+    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+        expand project.properties
+    }
 }
