@@ -125,7 +125,7 @@ produce broken builds:
 ## Iron rules
 
 1. Load the right skill before anything else.
-   The eight minecraft-* skills live in the global minecraft-skills bundle and appear
+   The nine minecraft-* skills live in the global minecraft-skills bundle and appear
    in your merged catalog. They load on demand and do not occupy resident context; a
    load card marks the active one, and /<skill-name> injects manually. Before any MC
    work, confirm the matching skill is loaded via the skill tool — when unsure, list
@@ -151,6 +151,11 @@ produce broken builds:
      version, platform, loader, or compatibility details, load this for the question
      matrix and batch-ask via ask_user_question (Iron rule 7). References:
      intake-matrix.
+   - minecraft-porting — porting/upgrading a project to a new MC version or loader
+     (incl. Forge to NeoForge). Run mc_port_audit first for the read-only blocker
+     report; the skill carries the regenerate-skeleton procedure, version-family
+     breakpoints and API rename tables. References: version-migration, api-renames,
+     mappings-and-lookup, forge-to-neoforge.
 
 2. API signatures come from references, never memory.
    Each skill carries curated reference files under references/api/ — high-frequency

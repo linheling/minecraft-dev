@@ -14,9 +14,10 @@ const PROVIDER_NAME = 'minecraft-dev'
 
 /**
  * One skill per entry. `description` is the model-routing signal (when to load
- * this skill); keep it under ~500 chars and English. v0.3 ships the shared
- * build skill, the Paper / Fabric / Forge / NeoForge skills, the Spigot
- * legacy-line skill and the major-mods addon-reference skill.
+ * this skill); keep it under ~500 chars and English. v0.11 ships the shared
+ * build skill, the Paper / Fabric / Forge / NeoForge / Spigot skills, the
+ * major-mods addon-reference skill, the intake skill and the cross-version
+ * porting skill.
  */
 const SKILLS = [
   {
@@ -50,6 +51,10 @@ const SKILLS = [
   {
     name: 'minecraft-intake',
     description: 'Task intake and requirement clarification for Minecraft development (v0.7): when the user asks to create a plugin, mod, or addon but left out critical details, this skill provides the question matrix — Minecraft version, platform / mod loader, server core (Paper family incl. Folia, hybrid cores KCauldron/Thermos/Mohist/CatServer on legacy lines), target mod/plugin compatibility (softdepend list), and deployment (single server vs BungeeCord/Velocity proxy). Rules: ask once in a batch via ask_user_question with (Recommended) options; never re-ask what the user already gave; when the user says "you decide", pick the era default (Paper + current stable line on modern, era-pinned stack on legacy) and state the choice. Use when a Minecraft task lacks version, platform, loader, or compatibility details.',
+  },
+  {
+    name: 'minecraft-porting',
+    description: 'Plan and execute cross-version or cross-loader ports of Minecraft mods and plugins: the regenerate-skeleton-then-port-module-by-module procedure, version-family breakpoints (Java/Gradle/mappings/metadata per era from 1.7.10 to 26.x), API rename tables (registries, networking, NBT to DataComponents, ResourceLocation), mapping lookups (MCP/SRG/official/Yarn), and a Forge 1.20.1 to NeoForge 1.21.x migration guide with side-by-side snippets. Use when upgrading a project to a newer Minecraft version, moving between Forge and NeoForge (or Fabric), or asked whether an existing project can be ported. Pair with the mc_port_audit tool for a read-only blocker report before editing.',
   },
 ]
 

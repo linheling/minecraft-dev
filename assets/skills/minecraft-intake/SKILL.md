@@ -24,6 +24,7 @@
 | 老线插件 | 1.7.10 or 1.12.2、**混合服核心**（KCauldron/Thermos/Mohist/CatServer）、JDK8 环境 | 1.12.2 + 纯 Spigot |
 | 新 mod | 加载器（Forge/Fabric/NeoForge）、MC 版本、加载器版本 | NeoForge 或 Fabric + 最新稳定线 |
 | 老线 mod | 时代（1.7.10 = FG1.2 fork / 1.12.2 = FG3 / 1.16.5 = FG5，决定 wrapper）、Forge 版本、**是否混合服** | 按时代钉选 |
+| 移植/升级 | 源平台 + 源 MC 版本、目标平台 + 目标 MC 版本、注册名/存档/配置是否要保持兼容、是否接受破坏性变更 | 同平台就近升级并保留注册名；跨大版本（如 1.12.2→1.20.1）接受按目标版本重建骨架 | 
 | 附属 addon | 目标模组 + MC 版本 + 模组版本、扩展点 | 目标模组最新版本 |
 | 资源包（pack） | 目标 MC 版本、**包类型**、**客户端前端**（OptiFine/citresewn/原版）、分版、服务端侧（自定义物品/改名） | 26.2 + citresewn（**26.3 没有 CIT 前端**——Modrinth 上 cit-resewn-continuation / cit-resewn-fork 最高只到 26.2，2026-09 实测；纯原版包才可 26.3） |
 | 跨服/群组 | BungeeCord/Velocity、是否 Folia | 单服 |
@@ -47,4 +48,6 @@
 
 ## 6. 参考文件索引
 
-- `references/api/intake-matrix.md` — 场景 × 必问项 × 默认值 × 不问时机 全表 + 默认值理由 + **资源包任务补充（v0.7）**
+- `references/api/intake-matrix.md` — 场景 × 必问项 × 默认值 × 不问时机 全表 + 默认值理由 + **资源包任务补充（v0.7）** + **移植任务补充（v0.11）**
+
+> 移植/升级类任务核对完参数后，交给 `minecraft-porting` 技能执行（本插件第 9 个内置技能）；可用 `mc_port_audit` 先静态扫描现有工程，拿到阻断项清单再决定「就地升级」还是「再生骨架 + 逐模块移植」。

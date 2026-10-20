@@ -2,14 +2,17 @@
  * Minecraft development tools for DeepSeek Harness. v0.3 registers
  * `mc_scaffold` for Paper, Fabric, Forge (1.7.10/1.12.2/1.16.5/1.20.1),
  * NeoForge and Spigot (1.7.10/1.12.2), plus `mc_gradle` (v0.3) which runs a
- * Gradle task via the project wrapper. Deployment tunables (gradle timeout,
- * output tail) are Config fields — see cordis.patch.yml.
+ * Gradle task via the project wrapper, and `mc_port_audit` (v0.11) which
+ * statically audits a project against a target platform/version before a port.
+ * Deployment tunables (gradle timeout, output tail) are Config fields —
+ * see cordis.patch.yml.
  * @module minecraft-dev/tools
  */
 
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import Schema from '@deepseek-ai/schemastery'
 import { renderGradleResult, runGradle } from './lib/gradle.js'
+import { auditProject } from './lib/port-audit.js'
 import { gradleCallView, gradleResultView, scaffoldCallView } from './lib/present.js'
 import { scaffoldProject } from './lib/scaffold.js'
 import { SUPPORTED_PLATFORMS } from './lib/versions.js'
@@ -47,6 +50,33 @@ export const Config = Schema.object({
   /** Characters mc_gradle keeps from merged output (head + tail around the truncation marker). */
   outputTailChars: Schema.number().default(12_000),
 })
+
+/** One-line summary of an audit run, followed by every finding with file:line. */
+function renderAuditResult(value) {
+  const lines = [
+    `Migration audit against ${value.project.platform} ${value.project.minecraftVersion} `
+      + `(line ${value.target.line}, Java ${value.target.javaVersion}): `
+      + (value.ok ? 'no blockers.' : 'blocked.'),
+    `Project: ${value.project.dir}`,
+    `Findings: ${value.summary.blockers} blocker(s), ${value.summary.warnings} warning(s), `
+      + `${value.summary.infos} info(s).`,
+  ]
+  const order = { blocker: 0, warning: 1, info: 2 }
+  const sorted = [...value.findings].sort(
+    (a, b) => (order[a.severity] ?? 3) - (order[b.severity] ?? 3),
+  )
+  for (const finding of sorted) {
+    const where = finding.file
+      ? ` — ${finding.file}${typeof finding.line === 'number' ? `:${finding.line}` : ''}`
+      : ''
+    lines.push(`- [${finding.severity}] ${finding.code}: ${finding.message}${where}`)
+    if (finding.hint) lines.push(`  hint: ${finding.hint}`)
+  }
+  if (sorted.length === 0) {
+    lines.push('No issues detected. Still verify API signatures against the target version before porting.')
+  }
+  return lines.join('\n')
+}
 
 /** Register the minecraft-dev tools on `ctx.tools`. */
 export function apply(ctx, config = {}) {
@@ -179,5 +209,55 @@ export function apply(ctx, config = {}) {
     },
     presentCall: gradleCallView,
     presentResult: gradleResultView,
+  }))
+
+  ctx.tools.register(defineTool({
+    name: 'mc_port_audit',
+    description: 'Audit an existing Minecraft project read-only against a target platform/version '
+      + 'before porting it. Checks the Gradle wrapper version, Java level/toolchain, foojay resolver, '
+      + 'mods.toml/neoforge.mods.toml version ranges, plugin.yml api-version, build plugin type, '
+      + 'dependency coordinates, and imports of removed/renamed APIs (e.g. GameRegistry, '
+      + 'SimpleNetworkWrapper, net.minecraft.block.Block). Returns findings sorted by severity '
+      + '(blocker/warning/info) with file:line and a repair hint. Writes nothing: run it first, then '
+      + 'decide between an in-place upgrade and regenerate-skeleton porting.',
+    parameters: {
+      projectDir: {
+        type: 'string',
+        required: true,
+        description: 'Absolute path of the existing project root to inspect (read-only).',
+      },
+      platform: {
+        type: 'string',
+        required: true,
+        enum: [...SUPPORTED_PLATFORMS],
+        description: `Target platform to migrate to. Supported: ${SUPPORTED_PLATFORMS.join(', ')}.`,
+      },
+      minecraftVersion: {
+        type: 'string',
+        required: true,
+        description: 'Target Minecraft version line, e.g. 1.20.1, 1.21.11, 26.3. Must be one of the '
+          + 'platform lines listed by mc_scaffold (unknown lines throw with the supported list).',
+      },
+    },
+    output: {
+      schema: {
+        type: 'object',
+        properties: {
+          ok: { type: 'boolean', required: true },
+          project: { type: 'object', required: true },
+          target: { type: 'object', required: true },
+          findings: { type: 'array', required: true, items: { type: 'object' } },
+          summary: { type: 'object', required: true },
+        },
+      },
+      render: (_args, value) => [{ type: 'text', text: renderAuditResult(value) }],
+    },
+    execute(args) {
+      return auditProject({
+        projectDir: args.projectDir,
+        platform: args.platform,
+        minecraftVersion: args.minecraftVersion,
+      })
+    },
   }))
 }

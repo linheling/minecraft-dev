@@ -23,7 +23,7 @@ Minecraft 开发插件 for [DeepSeek Harness](https://github.com/deepseek-ai/dee
 
 ## 功能一览
 
-### 8 个技能（模型按需加载，不占常驻上下文）
+### 9 个技能（模型按需加载，不占常驻上下文）
 
 | 技能 | 内容 |
 |---|---|
@@ -35,13 +35,15 @@ Minecraft 开发插件 for [DeepSeek Harness](https://github.com/deepseek-ai/dee
 | `minecraft-spigot-legacy` | 1.7.10 / 1.12.2 老线 Bukkit 插件 + Cauldron/Thermos/Mohist 混合服说明 + 2 份老线 API 参考 |
 | `minecraft-major-mods` | 大型模组附属开发：28 个模组条目（1.7.10×10 / 1.12.2×8 / 现代×10，含拔刀剑、神秘时代、匠魂、植物魔法、Create、Botania、AE2、Mekanism、Curios、JEI/REI 等），每条含核实过的 curse.maven 坐标与扩展点 |
 | `minecraft-intake` | **任务信息核对（v0.7）**：用户请求写插件/mod/附属但信息不足时，按场景批量提问（版本/平台/加载器/核心/混合端/兼容性/部署），一次问全、不重复问、授权默认 |
+| `minecraft-porting` | **跨版本 / 跨加载器移植（v0.11）**：再生骨架 + 逐模块移植工序、版本族破坏点速查（1.7.10→26.x）、API 改名表（注册/网络/NBT→DataComponents/ResourceLocation）、MCP/SRG/official/Yarn 映射查询、Forge 1.20.1→NeoForge 1.21.x 左右对照；配合 `mc_port_audit` 先出只读阻断清单 |
 
-### 3 个工具
+### 4 个工具
 
 | 工具 | 用途 |
 |---|---|
 | `mc_scaffold` | 一句话创建完整可构建项目：paper / fabric / forge / neoforge / spigot 五平台，自动配好构建脚本、主类、元数据、**时代对应的 Gradle wrapper** |
 | `mc_gradle` | 在项目里跑 `gradlew <task>`：终端卡片显示、超时自动杀进程树、输出头尾截断、非零退出码不报错而是可读呈现 |
+| `mc_port_audit` | **只读**审计现有工程迁移到目标平台/版本是否可行：核对 Gradle wrapper 版本、Java 级别、foojay、`mods.toml`/`neoforge.mods.toml` 版本范围、`plugin.yml` 的 `api-version`、构建插件类型与已移除 API（GameRegistry/SimpleNetworkWrapper/`net.minecraft.block.Block` 等），按 blocker/warning/info 输出并给修复建议 |
 | `mc_codex` | **只在「Minecraft 架构师」预设里可用**：把架构 brief 写到 `<项目>/.dsh/codex-architect.md`，再用**你自己的 Codex CLI** 跑一次完全可见的架构会话——默认走官方 `codex app-server --stdio` 协议（**会话会出现在 Codex 桌面版列表里、可续聊**），也可 `mode: "exec"` 退回 `codex exec`；命令、完整输出、退出码、用时、改动文件、会话 id/线程 id、rollout 路径、token 用量全部回到会话里 |
 
 ### 4 个内置子代理（v0.5.0，四子代理团队）
@@ -59,7 +61,7 @@ Minecraft 开发插件 for [DeepSeek Harness](https://github.com/deepseek-ai/dee
 
 | 预设 | 内容 |
 |---|---|
-| `minecraft`（Minecraft 专家） | 一键切换的专精 agent：standard 全工具集（shell / 文件 / 检索 / 技能 / 计划 / 目标 / 子代理 / 工作流）+ 中文专家人设 + 全局可见的 8 个技能与 4 个内置子代理 subagent_mc_plan/skeleton/content/verify（v0.6.0 起装完插件重启 dsh 后**自动安装**到 `$DSH_HOME/.agent-presets/minecraft/`，见下方「Minecraft 专家 agent 的安装」） |
+| `minecraft`（Minecraft 专家） | 一键切换的专精 agent：standard 全工具集（shell / 文件 / 检索 / 技能 / 计划 / 目标 / 子代理 / 工作流）+ 中文专家人设 + 全局可见的 9 个技能与 4 个内置子代理 subagent_mc_plan/skeleton/content/verify（v0.6.0 起装完插件重启 dsh 后**自动安装**到 `$DSH_HOME/.agent-presets/minecraft/`，见下方「Minecraft 专家 agent 的安装」） |
 | `minecraft-architect`（**Minecraft 架构师（Astra神的瞥视）**，v0.8.0） | 专家预设**逐字节复制**后只多两处：一段人设 + 一行 `minecraft-dev/codex` 模块（注册 `mc_codex` 工具与 `minecraft-codex-architect` 技能）。因此专家预设的工具/技能目录完全不变，只有本预设能看到 `mc_codex` |
 
 #### Minecraft 架构师：Codex 做架构，DSH 填内容（v0.8.0）
@@ -174,7 +176,7 @@ cp -r <minecraft-dev 仓库>/preset/minecraft ~/.dsh/.agent-presets/
 - 发现是**热扫描**：运行中的 dsh 无需重启即可看到新 preset；但**新会话**才生效。
 - Windows 用户：可用 PowerShell `Copy-Item -Recurse` 等价命令。
 - 切换位置：Web UI **新建会话**的 preset 选择器选「Minecraft 专家」。
-- 验证：新建会话选该 preset，问「列出你能用的技能」，应返回 8 个 minecraft-* 技能 + mc_scaffold/mc_gradle + 4 个内置子代理 subagent_mc_* + subagent/subagent_fork/tool-workflow/ralph 工具；问「你是什么模型、工作目录在哪」，应回答本会话模型（`{{model}}` 解析）并**调用 shell 打印当前目录**——dsh 0.2.1 起没有 `{{cwd}}` 这个变量，写它会让首轮直接失败。
+- 验证：新建会话选该 preset，问「列出你能用的技能」，应返回 9 个 minecraft-* 技能 + mc_scaffold/mc_gradle/mc_port_audit + 4 个内置子代理 subagent_mc_* + subagent/subagent_fork/tool-workflow/ralph 工具；问「你是什么模型、工作目录在哪」，应回答本会话模型（`{{model}}` 解析）并**调用 shell 打印当前目录**——dsh 0.2.1 起没有 `{{cwd}}` 这个变量，写它会让首轮直接失败。
 
 ## 使用
 

@@ -48,3 +48,20 @@
 3. **服务端侧**：是否有 MMOItems 等自定义物品（影响 CIT 条件匹配与 damage/unbreakable 判断）、是否需要服务端改名（custom_name/item_name 是字面文本，资源包翻译不了——见 minecraft-pack-lang）。
 
 其他沿用通用规则：目标 MC 版本必问（决定 pack_format 与格式断代——**具体 pack_format 数值矩阵以 minecraft-pack-core 技能的 references 为准，本表不重复维护**，避免两处漂移）、分版需求（1.7.10~26.3 全时代还是单版本）、pack.config.json 的 names/syncGroups 是否需要预填。详情交叉引用：minecraft-pack-core（结构/矩阵）、minecraft-pack-cit（条件通道）、minecraft-pack-lang（服务端边界）。
+
+## 6. 移植/升级任务补充（v0.11）
+
+移植类任务与「从零新建」的提问重点不同，必须多问四项：
+
+| # | 必问项 | 为什么 | 默认（用户授权时） |
+|---|---|---|---|
+| 1 | 源平台 + 源 MC 版本 | 决定破坏面：同一加载器跨代 vs 跨加载器（Forge→NeoForge）难度不同；源版本还决定旧 API 清单（如 1.7.10 的 `cpw.mods.fml`） | 从工程文件探测（`build.gradle` / `mods.toml` / `plugin.yml`），探测不到再问 |
+| 2 | 目标平台 + 目标 MC 版本 | 目标必须是 `mc_scaffold` 支持的 19 个组合之一，否则只能手工建骨架 | 同平台最近一个稳定线（不默认 26.3：Paper 仅 alpha、NeoForge 仅 beta） |
+| 3 | 注册名 / 存档 / 配置是否要兼容 | 注册名（方块/物品 id）与 `ResourceLocation` 变了会让旧存档/旧配置失效；这是「就地升级」与「重建骨架」的分水岭 | 保留注册名与配置键；做不到时在回复开头列出破坏项 |
+| 4 | 是否接受破坏性变更 | 跨 Java/Gradle 代（8→17/21/25）、MCP→official、NBT→DataComponents 都是不可逆改动，必须让用户知情 | 接受，但逐项列出并给回退方案 |
+
+执行侧约定：
+
+- 参数核对完 → 交给 `minecraft-porting` 技能；先跑 `mc_port_audit`（静态审计，只读）拿 blocker/warning 清单，再决定工序。
+- 工序默认「再生骨架 + 逐模块移植」：`mc_scaffold` 生成目标版本 → 搬 `src/main/java` 逐模块 → 每模块对照目标版本 references 校签名 → `mc_gradle build` 当闸门 → 搬 resources 与元数据。只有单代小跨步（如 1.20.1→1.20.4）才建议就地改 `build.gradle`。
+- 提问矩阵不重复维护版本坐标：所有目标坐标以 `lib/versions.js` 与 `minecraft-java-build` 的表为准。
