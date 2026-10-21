@@ -25,12 +25,12 @@
 | --- | --- | --- | --- | --- |
 | 1.7.10 | Spigot | 8 | `org.spigotmc:spigot-api:1.7.10-R0.1-SNAPSHOT`（无公共 maven，模板用 vendored jar） | 有 |
 | 1.12.2 | Spigot | 8 | `org.spigotmc:spigot-api:1.12.2-R0.1-SNAPSHOT`（Spigot hub nexus） | 有 |
-| 1.20.6 | Paper | 17 | `io.papermc.paper:paper-api:1.20.6-R0.1-SNAPSHOT` | 有（paper `1.20`，条目无 coords 字段） |
+| 1.20.6 | Paper | 21 | `io.papermc.paper:paper-api:1.20.6-R0.1-SNAPSHOT` | 有（paper `1.20`，Gradle 8.14.3） |
 | 1.21.8 | Paper | 21 | `io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT` | 有（`1.21`） |
 | 26.2 | Paper | 25 | `io.papermc.paper:paper-api:26.2.build.+` | 有（`26`） |
-| 26.3 | Paper | 25 | `io.papermc.paper:paper-api:26.3.build.+`（仅 alpha，`26.3.build.35-alpha`） | 有（`26.3`） |
+| 26.3 | Paper | 25 | `io.papermc.paper:paper-api:26.3.build.+`（2026-10 起为 `-stable`，实测 `26.3.build.209-stable`） | 有（`26.3`） |
 
-Paper 坐标由 lib/versions.js 的 `getPaperApiVersion` 生成：1.x 版本线返回 `<mc>-R0.1-SNAPSHOT`，26.x 返回 `<line>.build.+`。
+Paper 坐标由 lib/versions.js 的 `paperApiVersion` 生成：1.x 版本线返回 `<mc>-R0.1-SNAPSHOT`，26.x 返回 `<line>.build.+`。
 
 ## 2. 每族「从上一族迁来的动作清单」
 

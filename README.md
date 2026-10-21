@@ -16,7 +16,7 @@ Minecraft development plugin for [DeepSeek Harness](https://github.com/deepseek-
 - `mc_codex` — architect-preset-only bridge to the user's own Codex CLI, with a fully visible session.
 - `minecraft-porting` skill — regenerate-skeleton porting workflow, version-family breakpoints, API renames and a Forge → NeoForge guide.
 
-Tests: `npm test` (191 cases; Node 22.19+ / 24), syntax gate: `npm run check:syntax`, link check: `npm run check-links`.
+Tests: `npm test` (229 cases; Node 22.19+ / 24), syntax gate: `npm run check:syntax`, link check: `npm run check-links`.
 
 > ⚠️ **dsh 0.2.1 把子代理的 `persona` / `toolFilter` 删了**（`@deepseek-ai/dsh-tool-subagent`）：这两个键现在会**直接抛错** —— *"no longer supported; configure persona and tool plugins in an Agent Preset and select it with agentPreset (spawn only)"*；`backgroundMode` / `enableRunInBackground` 也一并消失（写了不报错，但完全不生效）。因此自 **v0.10.0** 起，A–D 四个角色的"人设 + 工具范围"改为 4 个 Agent Preset（`mc-plan` / `mc-skeleton` / `mc-content` / `mc-verify`，见 `preset/roles.js`），宿主层的 4 行只剩 `provider` / `toolName` / `agentPreset` / `maxDepth`。同时 0.2.1 的委派**一律异步**：调用立即返回 id、完成时通知，角色人设里已写明结果要放在最后一条消息里。
 >
@@ -227,11 +227,11 @@ cp -r <minecraft-dev 仓库>/preset/minecraft ~/.dsh/.agent-presets/
 
 | 平台 | 支持版本 | Java |
 |---|---|---|
-| paper | 1.20.x / 1.21.x / 26.2 / **26.3**（Paper 侧目前只有 `-alpha` 构建） | 17 / 21 / 25 |
-| fabric | 1.20.1 / 1.21.x / 26.2 / **26.3** | 17 / 21 / 25 |
+| paper | 1.20.x / 1.21.x / 26.2 / **26.3**（26.3 自 2026-10 起已有 `-stable` 构建，实测 `26.3.build.209-stable`） | 21 / 21 / 25 / 25 |
+| fabric | 1.20.1 / 1.21.x / 26.2 / **26.3** | 17 / 21 / 25 / 25 |
 | forge | 1.7.10 / 1.12.2 / 1.16.5 / 1.20.1 | 8 / 8 / 8 / 17 |
-| neoforge | 1.20.1 / **1.21.1** / 1.21.x（1.21.11）/ 26.2 / **26.3**（上游只有 `-beta`） | 17 / 21 / 21 / 25 |
-| spigot | 1.7.10 / 1.12.2 | 8 |
+| neoforge | 1.20.1 / **1.21.1** / 1.21.x（1.21.11）/ 26.2 / **26.3**（上游只有 `-beta`） | 17 / 21 / 21 / 25 / 25 |
+| spigot | 1.7.10 / 1.12.2 | 8 / 8 |
 
 26.x 的坐标按版本钉死（26.2 与 26.3 各一套）：mod 平台请求一个未钉的版本（如 `26.4`）会**显式报错**并列出已钉版本，不会静默给你另一版的项目。26.2 的坐标：fabric `loom 1.17.19 / loader 0.19.3 / api 0.157.0+26.2`、neoforge `moddev 2.0.144 / 26.2.0.59`；26.3：fabric `loom 1.17.21 / loader 0.19.5 / api 0.161.0+26.3`、neoforge `moddev 2.0.147 / 26.3.0.12-beta`。26.3 的 Java 仍是 25。**四组真机构建已跑通**（2026-09）：paper 26.2（对照）/ paper 26.3 / fabric 26.3 / neoforge 26.3 全部 BUILD SUCCESSFUL。fabric 的 loom 刻意留在 1.17 线：1.18.2 要求 **Gradle 自身跑在 Java 25** 上（`requires at least JVM runtime version 25`），会把「用旧 JDK 启动 Gradle」的用户全部挡掉。
 
@@ -276,13 +276,32 @@ npm run smoke:build      # 生成一个真实工程用于构建冒烟（之后�
 - **版本已 staged** → 报 `409 Cannot publish over previously staged version "X.Y.Z"`（上次发布中断残留）。解法：等 staged 过期，或 bump 到下一个版本发布。
 - 浏览器授权 URL 只在真实 TTY 显示（管道/重定向时被 `***` 打码）——需要用户终端操作时明确交给用户。
 
+## 非目标（Non-goals）
+
+以下内容刻意不覆盖，相关请求请改用别的工具或仓库：
+
+- **基岩版（Bedrock）**：行为包 / 资源包 / Addon / 基岩服务端（BDS、Nukkit、PocketMine）均不在范围内。
+- **已停摆或非主流平台**：Sponge、LiteLoader、Nukkit 等不作为实现规范；遇到存量老工程只给迁移提示。
+- **人物向 / 归档内容**：皮肤站、整合包搬运、网盘归档、论坛存档（如 archives.mcbbs.co）不收录。
+- **全量 Javadoc 复制**：API 参考只保留高频签名与版本差异，不追求 1:1 覆盖。
+- **仓库外重型联调**：真实客户端/服务端联调、模组包兼容矩阵不在本仓库的 CI 里跑（CI 只做生成 + `gradlew build`）。
+
+## 与 MinecraftDeveloperGuide 的关系
+
+[MinecraftDeveloperGuide](https://github.com/mouse0w0/MinecraftDeveloperGuide) 是 1.12.2 时代的**链接索引**（单 README，582 行，26.x 零条目）；本仓库是**可执行的现代线工具链**（1.7.10–26.3、19 个可生成组合、229 个测试 + 4 条 CI）。两者互补：
+
+- 查「当年怎么写」的历史资料清单 → 看它；
+- 要「现在能直接生成并构建」→ 用本仓库的 `mc_scaffold` / `mc_gradle` / `mc_port_audit`。
+
+**不应照抄**其 1.12.2 写法：`SimpleNetworkWrapper` 等旧网络注册 API、MCP/SRG 年代命名、`GuiComponent` / `Tessellator` 直绘、CoreMod/ASM 注入当默认手法、把 Sponge/LiteLoader/Nukkit 当现代实现规范。
+
 ## Known Limitations and Deferred Work
 
 - API 参考为精选高频签名（非全量 Javadoc），每份标注核对日期；`npm run check-links` 校验 http(s) 链接与 curse.maven projectId（经 api.cfwidget.com；403 限流等归 UNVERIFIABLE），**fileId 仍须以 CurseForge 文件页「Curse Maven 代码」为准**。API 更新流程：改 references → `npm run check-links` → 人工复核 UNVERIFIABLE 项。
 - `mc_gradle` 结束进程树时 win32 优先用 `taskkill /PID <pid> /T /F`；taskkill 缺失或返回失败时回退到 `process.kill(pid, 'SIGKILL')` 只杀根进程（Windows 没有负 pid 组信号，孙进程可能残留），属尽力而为。输出截断为头尾内联标记，不做 spill 文件。
 - 用户本地同名技能（`~/.dsh/skills/` 等，rank 低于 600）会覆盖本包 bundled 技能——预期行为，冲突时删本地同名目录。
 - 版本信息以 2026-10 为准；26.x 生态仍在快速变化（**Paper 26.3 已有 `-stable` 构建、NeoForge 26.3 只有 `-beta`**，26.2 两边都已 stable）。
-- **26.3 已真机构建验证，但生态仍是 alpha/beta 期**：2026-09 实跑四组构建全部成功 —— paper 26.2（对照，13s）、paper 26.3（8s，`26.3.build.+` 当时命中上游 `-alpha` 构建；2026-10 起已解析到 `26.3.build.207-stable`）、fabric 26.3（23s）、neoforge 26.3（6m43s，NeoForge `26.3.0.12-beta` + moddev 2.0.147）。但 **NeoForge 26.3 仍只有 `-beta`**（Paper 26.3 已有 `-stable` 构建），生产使用前请自行评估；26.2 两边都已 stable。
+- **26.3 已真机构建验证，但生态仍是 alpha/beta 期**：2026-09 实跑四组构建全部成功 —— paper 26.2（对照，13s）、paper 26.3（8s，`26.3.build.+` 当时命中上游 `-alpha` 构建；2026-10 起已解析到 `26.3.build.209-stable`）、fabric 26.3（23s）、neoforge 26.3（6m43s，NeoForge `26.3.0.12-beta` + moddev 2.0.147）。但 **NeoForge 26.3 仍只有 `-beta`**（Paper 26.3 已有 `-stable` 构建），生产使用前请自行评估；26.2 两边都已 stable。
 - **fabric 模板的 toolchain 修复（v0.9.0）**：两个 fabric 模板此前缺 foojay 解析器与 `java.toolchain`，只写 `options.release` + source/targetCompatibility —— 环境 JDK 低于目标时（本机默认 Java 22、26.x 线目标 25）直接报「不支持发行版本 25」且无法自举。现在与 paper/neoforge 一致：`settings.gradle` 带 `org.gradle.toolchains.foojay-resolver-convention:1.0.0`，`build.gradle` 用 `java { toolchain { languageVersion = JavaLanguageVersion.of(N) } }`，由 foojay 自动 provision。**这是 fabric（含 1.20/1.21 线）长期存在的缺陷，本次因真机构建才暴露。**
 - 市场类型判定：preset 文件（`preset.yml` + `agent.cordis.yml`）必须放在仓库的 `preset/minecraft/` 子目录——放仓库根目录会把市场类型从 cordis-plugin 误判为 agent-preset。
 - preset 人设为 2026-09 基线；26.x 生态（NeoForge 26.3 beta）变化时以技能 references 更新为准。

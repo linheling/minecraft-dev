@@ -63,7 +63,7 @@ test('toMainClass and toPackagePath convert names', () => {
 
 test('resolveLine maps lines to era defaults and rejects unknown combos', () => {
   assert.equal(resolveLine('paper', '1.21.8').javaVersion, 21)
-  assert.equal(resolveLine('paper', '1.20.x').javaVersion, 17)
+  assert.equal(resolveLine('paper', '1.20.x').javaVersion, 21)
   assert.equal(resolveLine('paper', '26.2').javaVersion, 25)
   assert.equal(defaultJavaVersion('paper', '1.21.8'), 21)
   assert.throws(() => resolveLine('paper', '1.19'), /supported Minecraft lines/)
@@ -73,7 +73,7 @@ test('resolveLine maps lines to era defaults and rejects unknown combos', () => 
 
 test('resolveLine hits every platform x line with the expected Java level', () => {
   const expectations = [
-    ['paper', '1.20.6', 17],
+    ['paper', '1.20.6', 21],
     ['paper', '1.21.11', 21],
     ['paper', '26.2', 25],
     ['fabric', '1.20.1', 17],

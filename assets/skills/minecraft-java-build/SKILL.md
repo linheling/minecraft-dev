@@ -18,8 +18,8 @@
 | 1.16.5 | 8~16 | 7.3.3（MDK 钉选，v0.2 模板） | Paper/Spigot | Forge（FG5）、Fabric |
 | 1.18.2 ~ 1.20.4 | 17 | 7.6+ | Paper/Spigot | Forge（1.20.1 止）、Fabric、NeoForge（1.20.1 起） |
 | 1.20.5 ~ 1.21.x | 21 | 8.5+ | Paper/Spigot（稳定主流线） | Fabric、NeoForge |
-| 26.3（**当前 26.x**，2026-09-15 发布；快照线 26.4-snapshot-1） | 25 | 9.1+（模组模板钉 9.2.1/9.5.1；paper 模板已随 26.x 钉 9.2.1） | Paper 已支持（`-stable`，最新 `26.3.build.207-stable`，2026-10-20 实测） | Fabric 已支持并实测构建通过（loader 0.19.5 / **loom 1.17.21** / Fabric API `0.161.0+26.3`）；NeoForge **仅 `-beta`**（26.3.0.12-beta），实测构建通过 |
-| 26.2（"Chaos Cubed"，2026-06 发布，26.x 前一线） | 25 | 9.1+（模组模板钉 9.2.1/9.5.1） | Paper 已支持（`-stable`，最新 `26.2.build.128-stable`） | Fabric 已支持（模板钉 loader 0.19.3 / loom 1.17.19 / Fabric API `0.157.0+26.2`）；NeoForge 已有非 beta 构建（最新 26.2.0.88，模板钉 26.2.0.59） |
+| 26.3（**当前 26.x**，2026-09-15 发布；快照线 26.4-snapshot-1） | 25 | 9.1+（模组模板钉 9.2.1/9.5.1；paper 模板已随 26.x 钉 9.2.1） | Paper 已支持（`-stable`，最新 `26.3.build.209-stable`，2026-10-21 实测） | Fabric 已支持并实测构建通过（loader 0.19.5 / **loom 1.17.21** / Fabric API `0.161.0+26.3`）；NeoForge **仅 `-beta`**（26.3.0.12-beta），实测构建通过 |
+| 26.2（"Chaos Cubed"，2026-06 发布，26.x 前一线） | 25 | 9.1+（模组模板钉 9.2.1/9.5.1） | Paper 已支持（`-stable`，最新 `26.2.build.134-stable`） | Fabric 已支持（模板钉 loader 0.19.3 / loom 1.17.19 / Fabric API `0.157.0+26.2`）；NeoForge 已有非 beta 构建（最新 26.2.0.88，模板钉 26.2.0.59） |
 
 补充：
 - 1.20.5 是 Java 21 分界点（官方把运行要求从 17 升到 21）；26.x（26.1 / 26.2 / 26.3）要求 Java 25——**26.3 未升 Java**（客户端 jar `version.json`：`java_component: java-runtime-epsilon`、`java_version: 25`，2026-09 复核）。

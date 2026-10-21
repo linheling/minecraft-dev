@@ -513,17 +513,36 @@ test('spigot 1.12.2 without api-version reports an info, not a warning', async (
 test('a Java level above the target line is a warning, not a blocker', async () => {
   const files = paperFiles({
     minecraftVersion: '1.20.6',
-    javaVersion: 21,
+    javaVersion: 25,
     apiVersion: '1.20',
     gradleVersion: '9.1',
   })
   await withFixture(files, async (projectDir) => {
     const result = await auditProject({ projectDir, platform: 'paper', minecraftVersion: '1.20.6' })
 
+    assert.equal(result.target.javaVersion, 21)
     assert.equal(result.ok, true)
     assert.deepEqual(result.summary, { blockers: 0, warnings: 1, infos: 0 })
     const finding = result.findings[0]
     assert.equal(finding.code, 'JAVA_LEVEL_MISMATCH')
     assert.equal(finding.severity, 'warning')
+  })
+})
+
+test('paper 1.20.6 requires Java 21 (its paper-api ships Java 21 bytecode)', async () => {
+  const files = paperFiles({
+    minecraftVersion: '1.20.6',
+    javaVersion: 17,
+    apiVersion: '1.20',
+    gradleVersion: '8.14.3',
+  })
+  await withFixture(files, async (projectDir) => {
+    const result = await auditProject({ projectDir, platform: 'paper', minecraftVersion: '1.20.6' })
+
+    assert.equal(result.target.javaVersion, 21)
+    assert.equal(result.ok, false)
+    const finding = result.findings.find((item) => item.code === 'JAVA_LEVEL_MISMATCH')
+    assert.ok(finding)
+    assert.equal(finding.severity, 'blocker')
   })
 })

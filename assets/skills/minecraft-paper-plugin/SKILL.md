@@ -2,7 +2,7 @@
 
 > 前置：构建/Java 版本问题同时加载 minecraft-java-build。本技能覆盖现代线（MC 1.20.x / 1.21.x / 26.x）；1.7.10~1.12.2 老线见 minecraft-spigot-legacy（v0.3 提供）。
 > **铁律：API 签名一律 `read_file` 查 `references/api/`，禁止凭记忆写签名。** 参考里没有的，用 web 工具查官方文档（docs.papermc.io 或 javadoc.io），不要编。
-> 核对日期：2026-09（26.3 上线复核：Paper 26.3 **只有 `-alpha` 构建、无 `-stable`**；26.2 有 `-stable`（最新 `26.2.build.128-stable`）；Java 仍为 25）。
+> 核对日期：2026-10-21（Paper 26.3 已有 `-stable` 构建，实测最新 `26.3.build.209-stable`；26.2 最新 `26.2.build.134-stable`；1.21 线上游已到 `1.21.11-R0.1-SNAPSHOT`，本仓库钉选 `1.21.8`；Java 25）。
 
 ## 1. 定位与家族
 
@@ -13,17 +13,17 @@
 
 | MC | Paper 支持 | Java |
 |---|---|---|
-| 1.20.x | 支持（1.20.6 起运行要求 Java 21） | 17 / 21 |
-| 1.21.x | 支持，**当前稳定主流线**，最新 1.21.8 | 21 |
-| 26.x（26.2） | 已支持，有 `-stable` 构建（最新 `26.2.build.128-stable`） | 25 |
-| 26.x（**26.3，当前正式版**，2026-09-15 发布） | **仅 `-alpha` 构建，没有 `-stable`**（最新 `26.3.build.35-alpha`；PaperMC 尚未发布稳定构建） | 25 |
+| 1.20.x | 支持；1.20.6 的 paper-api 以 Java 21 字节码发布，脚手架默认 toolchain 21（目标 1.20.1 时显式传 `javaVersion=17`） | 21 |
+| 1.21.x | 支持，**当前稳定主流线**（本仓库钉选 1.21.8；上游已发布 1.21.11） | 21 |
+| 26.x（26.2） | 已支持，有 `-stable` 构建（最新 `26.2.build.134-stable`） | 25 |
+| 26.x（**26.3，当前正式版**，2026-09-15 发布） | **已有 `-stable` 构建**（实测最新 `26.3.build.209-stable`）；新正式线，上生产前按目标构建号复核 | 25 |
 
-- **26.3 是 alpha 阶段**，不是可以无脑上生产的版本：repo.papermc.io 上该线全部构件的版本号都带 `-alpha`（2026-09 实测，35 个），**没有 `-stable`**。要在 26.x 上跑生产服，用 26.2（有 `-stable`）或 1.21.x；用 26.3 前先确认 PaperMC 是否已出稳定构建。
+- 26.3 在 2026-09 还是 alpha 阶段，2026-10 已转入 `-stable`（2026-10-21 实测 `26.3.build.209-stable`）；26.2 同样有 `-stable`。生产选型仍建议先 26.2 或 1.21.x，26.3 需按目标服实际构建号复核。
 - 家族其他分支（Purpur / Pufferfish / Folia）的 26.3 构建状态**未核实**（各自发布渠道，与本文件的 repo.papermc.io 实测不同源）——用之前逐一确认。
 
 paper-api 坐标（仓库 `https://repo.papermc.io/repository/maven-public/`）：
 - 1.x 时代：`io.papermc.paper:paper-api:<mc版本>-R0.1-SNAPSHOT`（如 `1.21.8-R0.1-SNAPSHOT`）
-- 26.x 时代：`io.papermc.paper:paper-api:26.<次版本>.build.+`（如 `26.2.build.+` / `26.3.build.+`，动态范围滚动取该线最新构建）。**26.3 用这个范围取到的是 `-alpha` 构建**（该线没有 `-stable`），要稳定产物就用 `26.2.build.+`。核对源：`https://repo.papermc.io/repository/maven-public/io/papermc/paper/paper-api/maven-metadata.xml`。
+- 26.x 时代：`io.papermc.paper:paper-api:26.<次版本>.build.+`（如 `26.2.build.+` / `26.3.build.+`，动态范围滚动取该线最新构建）。26.3 的范围现在解析到 `-stable`（2026-10-21 实测 `26.3.build.209-stable`）；需要更保守可按 `26.2.build.+` 钉选。核对源：`https://repo.papermc.io/repository/maven-public/io/papermc/paper/paper-api/maven-metadata.xml`。
 
 ## 3. 项目骨架
 
@@ -39,11 +39,13 @@ paper-api 坐标（仓库 `https://repo.papermc.io/repository/maven-public/`）�
 name: my-plugin          # 小写，与 jar 名一致
 version: 0.1.0
 main: com.example.MyPlugin   # 主类全限定名，写错服务器直接拒绝加载
-api-version: "1.21"      # 声明目标 API 级别：1.x 写主次版本（"1.21"）；26.x 写主次完整版本（"26.2" / "26.3"）——实测 26.2 服务端拒绝裸 "26"（IllegalArgumentException），必须 major.minor；26.3 未实测（该线只有 alpha 构建），按同样规则写 "26.3"
+api-version: "1.21"      # 声明目标 API 级别：1.x 写主次版本（"1.21"）；26.x 写主次完整版本（"26.2" / "26.3"）——实测 26.2 服务端拒绝裸 "26"（IllegalArgumentException），必须 major.minor；26.3 已有 stable 构建，按同样规则写 "26.3"
 author: name
 description: 一句话说明
 # 可选：commands / permissions / depend / softdepend / libraries
 ```
+
+- **元数据二选一**：除 `plugin.yml` 外还有 Paper 专属的 `paper-plugin.yml`（无 `commands`/`libraries`/`depend` 字段，命令走 Brigadier、库走 `loader:`），同一 JAR 只该保留一种；两者差异、依赖三键语义与 `PluginBootstrap` 见 `references/api/paper-plugin-yml-and-libraries.md`。
 
 ## 5. API 要点（签名查 references/api/）
 
@@ -53,6 +55,9 @@ description: 一句话说明
 - **玩家/物品**：`Player`、`ItemStack`、`Inventory`、`ItemMeta` → `references/api/player-and-inventory.md`
 - **调度/配置**：`BukkitRunnable`、`getConfig()` → `references/api/scheduler-and-config.md`
 - **世界/方块**：`World`、`Block`、`Location`、`Material` → `references/api/world-and-block.md`
+- **文本/Component**：Adventure `Component`/`Audience`、MiniMessage、旧格式互转、标题/动作栏 → `references/api/text-and-components.md`
+- **持久化/生态**：`PersistentDataContainer`、Vault 经济/权限、PlaceholderAPI、BossBar、Scoreboard → `references/api/data-and-ecosystem.md`
+- **元数据进阶**：`paper-plugin.yml` 与 `libraries:`、依赖声明、`PluginBootstrap` → `references/api/paper-plugin-yml-and-libraries.md`
 
 ## 6. 常见坑
 
@@ -73,5 +78,5 @@ description: 一句话说明
 
 ## 8. 开工前核对（intake）
 
-- 必问：**MC 版本**（1.20.x / 1.21.x / 26.2 / 26.3（**只有 alpha**））、**核心**（Paper / Spigot / Purpur / Pufferfish / **Folia**——Folia 无 Bukkit 同步调度器，api-version 需 ≥1.19.4 标记，细节见 references/api/folia.md）、兼容插件（softdepend，如 MMOItems / WorldGuard）。
-- 用户信息不足先批量提问（minecraft-intake），禁止猜着开工；"你决定"→ 默认 Paper + 1.21.x 最新稳定线（26.3 只有 alpha 构建，不做默认）。
+- 必问：**MC 版本**（1.20.x / 1.21.x / 26.2 / 26.3）、**核心**（Paper / Spigot / Purpur / Pufferfish / **Folia**——Folia 无 Bukkit 同步调度器，api-version 需 ≥1.19.4 标记，细节见 references/api/folia.md）、兼容插件（softdepend，如 MMOItems / WorldGuard）。
+- 用户信息不足先批量提问（minecraft-intake），禁止猜着开工；"你决定"→ 默认 Paper + 1.21.x 最新稳定线（26.3 已有 stable，但默认仍保守取 1.21.x / 26.2）。
