@@ -281,6 +281,100 @@ test('runCodexAppServer answers server->client requests instead of hanging on a 
   }
 })
 
+test('runCodexAppServer routes server->client requests to an injected handler', async () => {
+  const server = new FakeAppServer({ answer: 'done', approvalRequest: true })
+  const { dir, promptFile } = await promptFixture()
+  const seen = []
+  try {
+    const result = await runCodexAppServer({
+      projectDir: dir,
+      promptFile,
+      timeoutMs: 5000,
+      tailChars: 2000,
+      onServerRequest: (method, params) => {
+        seen.push([method, params])
+        return { decision: 'accept' }
+      },
+      internals: internals(server),
+    })
+    assert.equal(result.exitCode, 0)
+    assert.deepEqual(seen, [['item/commandExecution/requestApproval', { command: 'rm -rf /' }]])
+    assert.deepEqual(server.replies()[0].result, { decision: 'accept' })
+  } finally {
+    await rm(dir, { recursive: true, force: true })
+  }
+})
+
+test('runCodexAppServer declines when the injected handler throws or rejects', async () => {
+  for (const handler of [
+    () => { throw new Error('handler boom') },
+    () => Promise.reject(new Error('handler boom')),
+  ]) {
+    const server = new FakeAppServer({ answer: 'done', approvalRequest: true })
+    const { dir, promptFile } = await promptFixture()
+    try {
+      const result = await runCodexAppServer({
+        projectDir: dir,
+        promptFile,
+        timeoutMs: 5000,
+        tailChars: 2000,
+        onServerRequest: handler,
+        internals: internals(server),
+      })
+      assert.equal(result.exitCode, 0)
+      await waitFor(() => server.replies().length === 1, 'decline reply')
+      assert.deepEqual(server.replies()[0].result, { decision: 'decline' })
+    } finally {
+      await rm(dir, { recursive: true, force: true })
+    }
+  }
+})
+
+test('runCodexAppServer supports an async onServerRequest handler', async () => {
+  const server = new FakeAppServer({ answer: 'done', approvalRequest: true })
+  const { dir, promptFile } = await promptFixture()
+  try {
+    const result = await runCodexAppServer({
+      projectDir: dir,
+      promptFile,
+      timeoutMs: 5000,
+      tailChars: 2000,
+      onServerRequest: async () => ({ decision: 'accept' }),
+      internals: internals(server),
+    })
+    assert.equal(result.exitCode, 0)
+    await waitFor(() => server.replies().length === 1, 'accept reply')
+    assert.deepEqual(server.replies()[0].result, { decision: 'accept' })
+  } finally {
+    await rm(dir, { recursive: true, force: true })
+  }
+})
+
+test('runCodexAppServer decodes UTF-8 stderr split across chunks', async () => {
+  const server = new FakeAppServer({ answer: 'done' })
+  const { dir, promptFile } = await promptFixture()
+  const withStderr = internals(server, {
+    spawnImpl: (program, args, options) => {
+      server.spawn = { program, args, options }
+      queueMicrotask(() => {
+        const bytes = Buffer.from('编码错误')
+        server.stderr.write(bytes.subarray(0, 2))
+        server.stderr.write(bytes.subarray(2))
+      })
+      return server
+    },
+  })
+  try {
+    const result = await runCodexAppServer({
+      projectDir: dir, promptFile, timeoutMs: 5000, tailChars: 2000, internals: withStderr,
+    })
+    assert.match(result.output.text, /编码错误/)
+    assert.doesNotMatch(result.output.text, /\uFFFD/)
+  } finally {
+    await rm(dir, { recursive: true, force: true })
+  }
+})
+
 // ---------------------------------------------------------------------------
 // failure paths
 // ---------------------------------------------------------------------------
@@ -369,6 +463,18 @@ test('runCodexAppServer refuses to run without a Codex CLI and validates its own
     await assert.rejects(
       runCodexAppServer({ projectDir: dir, promptFile, timeoutMs: 1000, tailChars: 0, internals: {} }),
       /invalid tailChars/,
+    )
+    await assert.rejects(
+      runCodexAppServer({
+        projectDir: dir, promptFile, timeoutMs: 1000, tailChars: 100, permissionMode: 'yolo', internals: {},
+      }),
+      /invalid permissionMode[\s\S]*never, approve-for-me/,
+    )
+    await assert.rejects(
+      runCodexAppServer({
+        projectDir: dir, promptFile, timeoutMs: 1000, tailChars: 100, onServerRequest: 'nope', internals: {},
+      }),
+      /invalid onServerRequest/,
     )
     await assert.rejects(
       runCodexAppServer({ projectDir: dir, promptFile, timeoutMs: 1000, tailChars: 100, signal: AbortSignal.abort('user'), internals: {} }),

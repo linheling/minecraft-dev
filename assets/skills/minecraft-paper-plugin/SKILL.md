@@ -31,7 +31,7 @@ paper-api 坐标（仓库 `https://repo.papermc.io/repository/maven-public/`）�
 
 `build.gradle.kts` 两条路线（二选一）：
 - **轻量路线（默认）**：`compileOnly("io.papermc.paper:paper-api:...")` + shadow 插件打 fat jar。绝大多数插件用这个。
-- **重型路线**：`io.papermc.paperweight.userdev` 插件——需要反混淆服务器类（改 NMS）时才用；会拖慢构建，不推荐新手。
+- **重型路线**：`io.papermc.paperweight.userdev` 插件——需要反混淆服务器类（改 NMS）时才用；会拖慢构建，不推荐新手。NMS 映射分界、反射路线与 ProtocolLib 5.4.0 用法见 `references/api/nms-and-protocol.md`。
 
 ## 4. plugin.yml 必填字段
 
@@ -58,6 +58,7 @@ description: 一句话说明
 - **文本/Component**：Adventure `Component`/`Audience`、MiniMessage、旧格式互转、标题/动作栏 → `references/api/text-and-components.md`
 - **持久化/生态**：`PersistentDataContainer`、Vault 经济/权限、PlaceholderAPI、BossBar、Scoreboard → `references/api/data-and-ecosystem.md`
 - **元数据进阶**：`paper-plugin.yml` 与 `libraries:`、依赖声明、`PluginBootstrap` → `references/api/paper-plugin-yml-and-libraries.md`
+- **NMS/数据包**：paperweight-userdev、反射访问、ProtocolLib 5.4.0（1.21.4~1.21.8）与版本边界 → `references/api/nms-and-protocol.md`
 
 ## 6. 常见坑
 

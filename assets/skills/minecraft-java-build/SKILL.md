@@ -100,3 +100,10 @@ plugins {
 
 - 必问：**平台 + MC 版本**（决定 JDK/wrapper 配对）、是否老线（JDK8 + JAVA_HOME）、spigot 1.7.10 的 vendored jar 是否就位。
 - 默认：按第 1 节版本时代表钉选；用户信息不足先批量提问（minecraft-intake），禁止猜着开工。
+
+## 9. 参考文件索引
+
+| 文件 | 内容 |
+|---|---|
+| `references/api/crash-and-log-diagnosis.md` | 崩溃报告/日志定位、常见异常对照表、Spark/jstack/heap dump、可编译的 `LogTriage` 文本分诊器 |
+| `references/api/external-resources.md` | 官方文档、Javadoc、版本/映射、平台与排障站点清单（附 2026-10-21 可达性抽检） |

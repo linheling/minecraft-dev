@@ -490,6 +490,78 @@ test('scaffold spigot 1.7.10 uses the vendored jar and ships the libs README', a
 // `paper-api:1.20-R0.1-SNAPSHOT`, and `forge 1.20` emitted `forge:1.20-47.3.0`.
 // ---------------------------------------------------------------------------
 
+test('scaffoldProject rejects a relative targetDir before touching disk', async () => {
+  await assert.rejects(
+    scaffoldProject({
+      platform: 'paper',
+      targetDir: 'relative/my-plugin',
+      name: 'my-plugin',
+      packageName: 'com.example.myplugin',
+      minecraftVersion: '1.21.8',
+    }),
+    /targetDir must be an absolute path/,
+  )
+})
+
+test('scaffoldProject rejects a filesystem root as targetDir', async () => {
+  const root = path.parse(process.cwd()).root
+  await assert.rejects(
+    scaffoldProject({
+      platform: 'paper',
+      targetDir: root,
+      name: 'my-plugin',
+      packageName: 'com.example.myplugin',
+      minecraftVersion: '1.21.8',
+    }),
+    /must not be a filesystem root/,
+  )
+})
+
+test('scaffoldProject removes a newly created target when a write fails', async () => {
+  const target = await makeTempDir()
+  const projectDir = path.join(target, 'p')
+  try {
+    await assert.rejects(
+      scaffoldProject({
+        platform: 'paper',
+        targetDir: projectDir,
+        name: 'p',
+        packageName: 'a.b',
+        minecraftVersion: '1.21.8',
+        internals: { writeFile: async () => { throw new Error('disk full') } },
+      }),
+      /disk full/,
+    )
+    await assert.rejects(stat(projectDir), /ENOENT/)
+  } finally {
+    await rm(target, { recursive: true, force: true })
+  }
+})
+
+test('scaffoldProject keeps a pre-existing empty target when a write fails', async () => {
+  const target = await makeTempDir()
+  const projectDir = path.join(target, 'p')
+  try {
+    await mkdir(projectDir)
+    await assert.rejects(
+      scaffoldProject({
+        platform: 'paper',
+        targetDir: projectDir,
+        name: 'p',
+        packageName: 'a.b',
+        minecraftVersion: '1.21.8',
+        internals: { writeFile: async () => { throw new Error('disk full') } },
+      }),
+      /disk full/,
+    )
+    // The caller's directory survives, and the partial tree is pruned.
+    assert.ok((await stat(projectDir)).isDirectory())
+    assert.deepEqual(await readdir(projectDir), [])
+  } finally {
+    await rm(target, { recursive: true, force: true })
+  }
+})
+
 test('scaffoldProject normalizes line-form versions before rendering', async () => {
   const root = await makeTempDir()
   const cases = [

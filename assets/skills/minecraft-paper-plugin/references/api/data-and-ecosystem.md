@@ -175,7 +175,7 @@ public final class StatsExpansion extends PlaceholderExpansion {
 }
 ```
 
-注册放在 `onEnable` 且先确认在线：`if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) new StatsExpansion(this, store).register();`（`register()` 返回 boolean）。`plugin.yml` 写 `softdepend: [PlaceholderAPI]`；坐标以官方 wiki 为准：仓库 `https://repo.extendedclip.com/releases/`，`compileOnly 'me.clip:placeholderapi:2.11.6'`（当前线已到 2.12.x）。插件没装时 `setPlaceholders` 原样返回字符串不抛异常，但类本身会 `NoClassDefFoundError`，判空不可省。
+注册放在 `onEnable` 且先确认在线：`if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) new StatsExpansion(this, store).register();`（`register()` 返回 boolean）。`plugin.yml` 写 `softdepend: [PlaceholderAPI]`；仓库地址与最新坐标以官方 wiki（https://wiki.placeholderapi.com/）为准，`compileOnly 'me.clip:placeholderapi:2.11.6'`（当前线已到 2.12.x）。插件没装时 `setPlaceholders` 原样返回字符串不抛异常，但类本身会 `NoClassDefFoundError`，判空不可省。
 
 ## 5. BossBar（屏幕顶部进度条）
 

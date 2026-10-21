@@ -102,7 +102,62 @@ test('runProcess flags an abort and kills the tree', async () => {
   assert.deepEqual(killed, [4242])
 })
 
+test('runProcess catches an abort that fires while spawnImpl is running', async () => {
+  const fake = fakeChild()
+  const controller = new AbortController()
+  const killed = []
+  const promise = runProcess(baseOptions({
+    signal: controller.signal,
+    internals: {
+      platform: 'win32',
+      spawnImpl: () => { controller.abort('mid-spawn'); return fake.child },
+      killTreeImpl: (platform, pid) => killed.push(pid),
+    },
+  }))
+  fake.emitClose(null, 'SIGTERM')
+  const result = await promise
+  assert.equal(result.aborted, true)
+  assert.deepEqual(killed, [4242])
+})
+
+test('runProcess decodes UTF-8 split across Buffer chunks', async () => {
+  const fake = fakeChild()
+  const promise = runProcess(baseOptions({ internals: { platform: 'win32', spawnImpl: () => fake.child } }))
+  const stdout = Buffer.from('你好')
+  const stderr = Buffer.from('世界')
+  fake.emitStdout(stdout.subarray(0, 2))
+  fake.emitStdout(stdout.subarray(2))
+  fake.emitStderr(stderr.subarray(0, 1))
+  fake.emitStderr(stderr.subarray(1))
+  fake.emitClose(0)
+  const result = await promise
+  assert.equal(result.output.text, '你好世界')
+})
+
+test('runProcess asks for verbatim argv only when spawning cmd.exe on win32', async () => {
+  const seen = []
+  const runWith = async (argv, override) => {
+    const fake = fakeChild()
+    const promise = runProcess(baseOptions({
+      argv,
+      ...(override === undefined ? {} : { windowsVerbatimArguments: override }),
+      internals: {
+        platform: 'win32',
+        spawnImpl: (command, args, options) => { seen.push(options.windowsVerbatimArguments); return fake.child },
+      },
+    }))
+    fake.emitClose(0)
+    await promise
+  }
+  await runWith(['prog', 'arg'])
+  await runWith(['cmd.exe', '/d', '/s', '/c', '"prog arg"'])
+  await runWith(['cmd.exe', '/d', '/s', '/c', '"prog arg"'], false)
+  assert.deepEqual(seen, [false, true, false])
+})
+
 test('runProcess rejects invalid limits and a pre-aborted signal', async () => {
+  await assert.rejects(runProcess(baseOptions({ argv: [] })), /argv must be a non-empty array/)
+  await assert.rejects(runProcess(baseOptions({ argv: [42] })), /argv must be a non-empty array/)
   await assert.rejects(runProcess(baseOptions({ timeoutMs: 0 })), /invalid timeoutMs/)
   await assert.rejects(runProcess(baseOptions({ tailChars: -1 })), /invalid tailChars/)
   const controller = new AbortController()

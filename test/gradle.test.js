@@ -388,12 +388,21 @@ test('gradleCallView renders the terminal card with cwd and description', () => 
 test('parseGradleExitStatus matches the dsh-shell contract', () => {
   assert.deepEqual(parseGradleExitStatus('body here\n[exit code: 3]'), { body: 'body here', exitCode: 3 })
   assert.deepEqual(parseGradleExitStatus('body here\n[killed by signal: SIGTERM]'), { body: 'body here', signal: 'SIGTERM' })
+  // renderProcessResult omits the marker for a zero exit, so no marker means 0
+  // — the same contract dsh-shell follows.
   assert.deepEqual(parseGradleExitStatus('plain body'), { body: 'plain body', exitCode: 0 })
+  // A timed-out run was killed; never show it as a green success.
+  assert.deepEqual(parseGradleExitStatus('body here\n[timed out after 5000ms]'), { body: 'body here' })
+  assert.deepEqual(parseGradleExitStatus('body here\n[exit code: null]'), { body: 'body here' })
+  assert.deepEqual(parseGradleExitStatus('body here\n[exit code: -1]'), { body: 'body here', exitCode: -1 })
 })
 
 test('gradleResultView turns the rendered text into a terminal result view', () => {
   const view = gradleResultView({ task: 'build' }, { content: [{ type: 'text', text: 'output here\n[exit code: 1]' }] })
   assert.deepEqual(view, { card: 'terminal', output: 'output here', exitCode: 1 })
+
+  const ok = gradleResultView({ task: 'build' }, { content: [{ type: 'text', text: 'BUILD SUCCESSFUL' }] })
+  assert.deepEqual(ok, { card: 'terminal', output: 'BUILD SUCCESSFUL', exitCode: 0 })
 
   const killed = gradleResultView({ task: 'build' }, { content: [{ type: 'text', text: 'out\n[killed by signal: SIGTERM]' }] })
   assert.deepEqual(killed, { card: 'terminal', output: 'out', signal: 'SIGTERM' })

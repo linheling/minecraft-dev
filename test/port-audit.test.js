@@ -337,6 +337,18 @@ test('clean paper 1.21.8 project has no findings and ok is true', async () => {
   })
 })
 
+test('missing wrapper and settings files do not crash the audit', async () => {
+  await withFixture({
+    'build.gradle': "plugins { id 'java' }\n",
+  }, async (projectDir) => {
+    const result = await auditProject({ projectDir, platform: 'paper', minecraftVersion: '1.21.8' })
+    const foojay = result.findings.find((finding) => finding.code === 'FOOJAY_MISSING')
+    assert.ok(foojay)
+    // There is no settings file to point at; the finding must not invent one.
+    assert.equal('file' in foojay, false)
+  })
+})
+
 test('mods.toml version range that misses the target is a blocker with line number', async () => {
   await withFixture(forgeMetadataFiles(), async (projectDir) => {
     const result = await auditProject({ projectDir, platform: 'forge', minecraftVersion: '1.20.1' })
