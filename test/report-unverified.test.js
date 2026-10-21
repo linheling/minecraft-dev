@@ -102,6 +102,21 @@ test('默认（有标记时）仍退出 0，并打印每文件计数与总数', 
   assert.match(out.output, /b\/c\.md: 1/)
 })
 
+test('--max 超阈值退出 1，等于阈值退出 0，非法值退出 2', (t) => {
+  const dir = makeFixture({ 'a.md': 'UNVERIFIED\nUNVERIFIED\n' })
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+
+  const over = capture()
+  assert.equal(main(['--dir', dir, '--max', '1'], over), 1)
+  assert.match(over.output, /超过上限 1/)
+
+  const equal = capture()
+  assert.equal(main(['--dir', dir, '--max', '2'], equal), 0)
+
+  const bad = capture()
+  assert.equal(main(['--dir', dir, '--max', 'two'], bad), 2)
+})
+
 test('--help 退出 0；未知参数或缺 --dir 值退出 2', () => {
   const help = capture()
   assert.equal(main(['--help'], help), 0)

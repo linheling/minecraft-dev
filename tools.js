@@ -22,7 +22,8 @@ const SCAFFOLD_DESCRIPTION = `Create a new Minecraft project from the bundled te
   + `and a Gradle wrapper so the project builds without a Gradle installation. `
   + `Supported platforms: ${SUPPORTED_PLATFORMS.join(', ')}. `
   + `targetDir must be a new or empty directory. javaVersion defaults to the era's level `
-  + `(8 for the 1.7.10/1.12.2/1.16.5 lines, 17 for 1.20.x, 21 for 1.21.x, 25 for 26.x) when omitted. `
+  + `(8 for the 1.7.10/1.12.2/1.16.5 lines; 17 for fabric/neoforge 1.20.x; `
+  + `21 for paper 1.20.x and the 1.21.x lines; 25 for 26.x) when omitted. `
   + `After scaffolding, run "gradlew.bat build" (Windows) or "./gradlew build" in targetDir; `
   + `the first build downloads dependencies and takes several minutes.`
 
@@ -113,7 +114,7 @@ export function apply(ctx, config = {}) {
       javaVersion: {
         type: 'integer',
         enum: [8, 17, 21, 25],
-        description: 'Java language level (8, 17, 21, or 25). Omit to use the era default: 8 for the 1.7.10/1.12.2/1.16.5 lines (spigot/forge), 17 for 1.20.x, 21 for 1.21.x, 25 for 26.x.',
+        description: 'Java language level (8, 17, 21, or 25). Omit to use the era default: 8 for the 1.7.10/1.12.2/1.16.5 lines (spigot/forge); 17 for fabric/neoforge 1.20.x; 21 for paper 1.20.x and the 1.21.x lines; 25 for 26.x.',
       },
     },
     output: {

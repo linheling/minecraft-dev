@@ -16,7 +16,7 @@ Minecraft development plugin for [DeepSeek Harness](https://github.com/deepseek-
 - `mc_codex` — architect-preset-only bridge to the user's own Codex CLI, with a fully visible session.
 - `minecraft-porting` skill — regenerate-skeleton porting workflow, version-family breakpoints, API renames and a Forge → NeoForge guide.
 
-Tests: `npm test` (245 cases; Node 22.19+ / 24), syntax gate: `npm run check:syntax`, link check: `npm run check-links`.
+Tests: `npm test` (246 cases; Node 22.19+ / 24), syntax gate: `npm run check:syntax`, link check: `npm run check-links`.
 
 > ⚠️ **dsh 0.2.1 把子代理的 `persona` / `toolFilter` 删了**（`@deepseek-ai/dsh-tool-subagent`）：这两个键现在会**直接抛错** —— *"no longer supported; configure persona and tool plugins in an Agent Preset and select it with agentPreset (spawn only)"*；`backgroundMode` / `enableRunInBackground` 也一并消失（写了不报错，但完全不生效）。因此自 **v0.10.0** 起，A–D 四个角色的"人设 + 工具范围"改为 4 个 Agent Preset（`mc-plan` / `mc-skeleton` / `mc-content` / `mc-verify`，见 `preset/roles.js`），宿主层的 4 行只剩 `provider` / `toolName` / `agentPreset` / `maxDepth`。同时 0.2.1 的委派**一律异步**：调用立即返回 id、完成时通知，角色人设里已写明结果要放在最后一条消息里。
 >
@@ -102,7 +102,9 @@ Tests: `npm test` (245 cases; Node 22.19+ / 24), syntax gate: `npm run check:syn
 
 ## 安装
 
-### 方式一：npm 安装（推荐）
+### 方式一：npm 安装（先确认 registry 版本）
+
+> **npm latest 可能落后于仓库**：截至 2026-10-21，registry `latest` 为 `0.10.1`，仓库已到 `0.11.8`；需要 `mc_port_audit`、`minecraft-porting` 或 26.3 支持时，请用方式二/三，或先 `npm view minecraft-dev version` 确认新版已发布。
 
 ```sh
 dsh plugin --profile web add minecraft-dev
@@ -257,10 +259,10 @@ npm run smoke:build      # 生成一个真实工程用于构建冒烟（之后�
 
 本仓库没有 npm 运行时依赖（`@deepseek-ai/*` 全是 peerDependencies，由 dsh 宿主提供），所以除 `plugin-load` 外 CI 不装包，只跑脚本：
 
-- `.github/workflows/ci.yml`：push 到 `master` / PR / 手动触发。`syntax` job 跑 `check:syntax`；`test` job 是 `ubuntu-latest` + `windows-latest` × Node 22/24 的四格矩阵跑 `npm test`，`ubuntu`×24 那格额外跑 `test:coverage`（阈值 80%）；`plugin-load` job 用 `npm install --no-save` 装已发布的 `@deepseek-ai/*` peer 包，再以 `REQUIRE_PLUGIN_DEPS=1` 跑 `modules.test.js` —— 本地默认跳过缺依赖的模块测试，这个 job 把跳过变成硬失败。
+- `.github/workflows/ci.yml`：push 到 `master` / PR / 手动触发。`syntax` job 跑 `check:syntax` 与 `check:unverified:gate`（UNVERIFIED 标记超过 53 即失败）；`test` job 是 `ubuntu-latest` + `windows-latest` × Node 22/24 的四格矩阵跑 `npm test`，`ubuntu`×24 那格额外跑 `test:coverage`（阈值 80%）；`plugin-load` job 用 `npm install --no-save` 装已发布的 `@deepseek-ai/*` peer 包，以 `REQUIRE_PLUGIN_DEPS=1` 跑 `modules.test.js`，再 `npm pack` 解包、校验 `assets`/`preset` 文件并 import 四个入口 —— 既把模块跳过变成硬失败，也验证真实发布包不缺文件。
 - `.github/workflows/doc-links.yml`：每周一 03:23 UTC + 手动触发，跑 `check-links`。外链超时/403 记 UNVERIFIABLE 不失败，404/410/5xx 或 curse.maven projectId 不符才是 BROKEN。
 - `.github/workflows/version-drift.yml`：每周一 04:17 UTC + 手动触发（可勾 strict），跑 `check:versions` 报告 `lib/versions.js` 与上游 metadata 的漂移；不可达 host 只记 unreachable，不算漂移。
-- `.github/workflows/smoke.yml`：每周一 03:17 UTC + 手动触发，用 `mc_scaffold` 生成 4 条代表线（paper 1.21.8 / fabric 26.3 / neoforge 26.3 / forge 1.12.2）并跑真实 `gradlew build`。四条腿在首次 dispatch（2026-10-21，run 39459854130）即 4/4 全绿，forge 1.12.2（Gradle 4.9 + JDK 8）也已转正为阻塞腿。
+- `.github/workflows/smoke.yml`：每周一 03:17 UTC + 手动触发，并在 PR 触及 `assets/templates/**`、`lib/versions.js`、`lib/scaffold.js` 等模板/坐标相关路径时运行；用 `mc_scaffold` 生成 4 条代表线（paper 1.21.8 / fabric 26.3 / neoforge 26.3 / forge 1.12.2）并跑真实 `gradlew build`。四条腿在首次 dispatch（2026-10-21，run 39459854130）即 4/4 全绿，forge 1.12.2（Gradle 4.9 + JDK 8）也已转正为阻塞腿。
 - 测试会逐字节比对 UTF-8 文本，Windows 上若被 CRLF 改写会假失败——`.gitattributes` 已把文本钉成 `eol=lf`。
 
 ### npm 发布（用户已授权自动执行）
@@ -288,7 +290,7 @@ npm run smoke:build      # 生成一个真实工程用于构建冒烟（之后�
 
 ## 与 MinecraftDeveloperGuide 的关系
 
-[MinecraftDeveloperGuide](https://github.com/mouse0w0/MinecraftDeveloperGuide) 是 1.12.2 时代的**链接索引**（单 README，582 行，26.x 零条目）；本仓库是**可执行的现代线工具链**（1.7.10–26.3、19 个可生成组合、245 个测试 + 4 条 CI）。两者互补：
+[MinecraftDeveloperGuide](https://github.com/mouse0w0/MinecraftDeveloperGuide) 是 1.12.2 时代的**链接索引**（单 README，582 行，26.x 零条目）；本仓库是**可执行的现代线工具链**（1.7.10–26.3、19 个可生成组合、246 个测试 + 4 条 CI）。两者互补：
 
 - 查「当年怎么写」的历史资料清单 → 看它；
 - 要「现在能直接生成并构建」→ 用本仓库的 `mc_scaffold` / `mc_gradle` / `mc_port_audit`。

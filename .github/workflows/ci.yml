@@ -31,6 +31,7 @@ jobs:
         with:
           node-version: 24
       - run: npm run check:syntax
+      - run: npm run check:unverified:gate
 
   test:
     name: tests (${{ matrix.os }}, node ${{ matrix.node }})
@@ -79,3 +80,38 @@ jobs:
           @deepseek-ai/dsh-skill@0.2.1-rc.2
           @deepseek-ai/schemastery@3.18.5
       - run: REQUIRE_PLUGIN_DEPS=1 node --test test/modules.test.js
+      # The checkout-based import above cannot catch a package that forgets a
+      # directory in package.json.files. Pack the real tarball, unpack it, assert
+      # the bundled assets/preset files are present, then import all four entry
+      # points from the unpacked package (peer packages resolve from the
+      # checkout's node_modules).
+      - name: pack the plugin
+        run: npm pack --json > /tmp/minecraft-dev-pack.json
+      - name: load the packed tarball
+        run: |
+          TARBALL=$(node -p "require('/tmp/minecraft-dev-pack.json')[0].filename")
+          rm -rf .pack-test
+          mkdir -p .pack-test
+          tar -xzf "$TARBALL" -C .pack-test
+          REQUIRE_PLUGIN_DEPS=1 node --input-type=module - <<'NODE'
+          import fs from 'node:fs'
+          import { pathToFileURL } from 'node:url'
+          const root = `${process.cwd()}/.pack-test/package`
+          const required = [
+            'skills.js', 'tools.js', 'preset.js', 'codex.js',
+            'cordis.patch.yml', 'lib/scaffold.js',
+            'assets/skills/minecraft-paper-plugin/SKILL.md',
+            'preset/minecraft/preset.yml',
+            'preset/minecraft/agent.cordis.yml',
+          ]
+          for (const rel of required) {
+            if (!fs.existsSync(`${root}/${rel}`)) throw new Error(`packed tarball is missing ${rel}`)
+          }
+          for (const entry of ['skills.js', 'tools.js', 'preset.js', 'codex.js']) {
+            await import(pathToFileURL(`${root}/${entry}`).href)
+            console.log(`loaded ${entry}`)
+          }
+          NODE
+      - name: clean pack artifacts
+        if: always()
+        run: rm -rf .pack-test minecraft-dev-*.tgz /tmp/minecraft-dev-pack.json

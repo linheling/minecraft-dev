@@ -3,6 +3,7 @@
 //
 // 只读扫描 assets/skills/**/*.md，按行统计包含 UNVERIFIED 的行：
 //   默认：打印每文件计数与总数，退出码 0（有标记也不失败——这是待办清单，不是错误）。
+//   --max <n>：标记总数超过 n 时退出码 1，用作 CI 棘轮门禁。
 //   --json：输出 { total, files: [{ path, count, lines: [{ line, text }] }] }。
 // 路径：仓库内文件用相对仓库根的正斜杠路径；仓库外（测试临时目录）用相对扫描根目录的路径。
 import fs from 'node:fs'
@@ -20,6 +21,7 @@ export const USAGE = `report-unverified — 统计 assets/skills/**/*.md 中的 
 选项:
   --dir <path>  扫描根目录（默认 assets/skills/）
   --json        输出机器可读 JSON（stdout 仅 JSON）
+  --max <n>     总数超过 n 时退出 1（CI 棘轮；默认不限制）
   --help        显示本帮助
 
 输出:
@@ -27,7 +29,7 @@ export const USAGE = `report-unverified — 统计 assets/skills/**/*.md 中的 
   { total, files: [{ path, count, lines: [{ line, text }] }] }。
   path 相对仓库根（仓库外目录则相对扫描根），line 从 1 开始，text 为整行去首尾空白。
 
-退出码: 0 = 扫描完成（无论有无标记）; 2 = 参数错误或目录不可用`
+退出码: 0 = 扫描完成（无标记或未超 --max）; 1 = 超过 --max; 2 = 参数错误或目录不可用`
 
 function toPosix(p) {
   return p.split(path.sep).join('/')
@@ -70,12 +72,21 @@ export function main(argv = [], opts = {}) {
   const stderr = opts.stderr || process.stderr
   let dir = DEFAULT_DIR
   let json = false
+  let max = null
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i]
     if (arg === '--json') json = true
     else if (arg === '--help' || arg === '-h') {
       stdout.write(`${USAGE}\n`)
       return 0
+    } else if (arg === '--max') {
+      const value = argv[i + 1]
+      i += 1
+      if (!value || !/^\d+$/.test(value)) {
+        stderr.write(`--max 需要一个非负整数\n${USAGE}\n`)
+        return 2
+      }
+      max = Number(value)
     } else if (arg === '--dir') {
       const value = argv[i + 1]
       i += 1
@@ -95,13 +106,22 @@ export function main(argv = [], opts = {}) {
   }
 
   const report = scan(dir)
+  const overLimit = max !== null && report.total > max
   if (json) {
     stdout.write(`${JSON.stringify(report, null, 2)}\n`)
+    if (overLimit) {
+      stderr.write(`UNVERIFIED 标记 ${report.total} 行，超过上限 ${max}\n`)
+      return 1
+    }
     return 0
   }
 
   stdout.write(`UNVERIFIED 标记：${report.total} 行，${report.files.length} 个文件\n`)
   for (const file of report.files) stdout.write(`  ${file.path}: ${file.count}\n`)
+  if (overLimit) {
+    stderr.write(`\nUNVERIFIED 标记 ${report.total} 行，超过上限 ${max}；请先收敛，或显式调高 --max。\n`)
+    return 1
+  }
   if (report.total > 0) {
     stdout.write('\n提示：标记是待办清单；查证后补证据，确证不了就写具体原因（见 assets/skills/minecraft-porting/SKILL.md 第 0 节）。\n')
   }

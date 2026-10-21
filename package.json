@@ -1,6 +1,6 @@
 {
   "name": "minecraft-dev",
-  "version": "0.11.7",
+  "version": "0.11.8",
   "description": "Minecraft development skills and tools for DeepSeek Harness: Paper/Spigot server plugins (modern and legacy lines), Fabric, Forge and NeoForge mods, MC 1.7.10 through 26.3, plus the mc_gradle Gradle runner, a second agent preset (Minecraft 架构师 / Astra神的瞥视) whose mc_codex tool drives the user's own Codex CLI as a transparent architect and hands content back through [TODO: Agent B] markers + FILL-SPEC.md, modern major-mod references (Create/Botania/AE2/Mekanism/Ars Nouveau/Farmer's Delight/Curios/JEI/REI/Patchouli), the minecraft-intake task-clarification skill (batch-ask when version/platform/loader details are missing), the check-doc-links link verifier, the read-only mc_port_audit migration audit tool, the minecraft-porting skill (regenerate-skeleton porting workflow with version-family breakpoints and Forge→NeoForge guidance), and a built-in A/B/C/D four-subagent team (subagent_mc_plan/skeleton/content/verify). Supports both dsh preset models: the 0.1.5/0.1.6 directory install and the 0.1.7+ agentPresets declaration",
   "type": "module",
   "main": "skills.js",
@@ -63,6 +63,7 @@
     "check-links": "node scripts/check-doc-links.mjs",
     "check:versions": "node scripts/check-versions.mjs",
     "check:unverified": "node scripts/report-unverified.mjs",
+    "check:unverified:gate": "node scripts/report-unverified.mjs --max 53",
     "smoke:build": "node scripts/smoke-build.mjs",
     "prepublishOnly": "node --test \"test/*.test.js\""
   },

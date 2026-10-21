@@ -11,13 +11,20 @@ name: Scaffold smoke build
 #   neoforge 26.3    JDK 25  (Gradle 9.2.1, moddev/NeoForm)
 #   forge    1.12.2  JDK 8   (Gradle 4.9, ForgeGradle 3, MCP)
 #
-# Not wired to push/PR on purpose: each leg resolves a full Minecraft / mappings
-# toolchain and takes minutes, which is too heavy for every push to a plugin
-# repo. Weekly drift check plus manual dispatch before a release is the gate;
-# add a `pull_request` trigger here once the four legs are proven green.
-
+# Pull requests that touch templates or version pins run this gate; ordinary
+# code changes skip the expensive resolution (unit tests still run). Weekly
+# drift check and manual dispatch remain the backstop.
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'assets/templates/**'
+      - 'lib/versions.js'
+      - 'lib/scaffold.js'
+      - 'lib/validate.js'
+      - 'lib/templates.js'
+      - 'scripts/smoke-build.mjs'
+      - '.github/workflows/smoke.yml'
   schedule:
     - cron: '17 3 * * 1'
 
