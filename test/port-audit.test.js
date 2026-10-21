@@ -546,3 +546,118 @@ test('paper 1.20.6 requires Java 21 (its paper-api ships Java 21 bytecode)', asy
     assert.equal(finding.severity, 'blocker')
   })
 })
+
+/** A clean paper fixture with extra dependency lines appended to the block. */
+function paperWithDependencies(dependencyLines) {
+  const files = paperFiles()
+  const block = [
+    'dependencies {',
+    '    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")',
+    ...dependencyLines.map((line) => `    ${line}`),
+    '}',
+  ].join('\n')
+  files['build.gradle.kts'] = files['build.gradle.kts'].replace(/dependencies \{[\s\S]*?\n\}/, block)
+  return files
+}
+
+test('dependency audit ignores non-Minecraft coordinates and out-of-range MC tokens', async () => {
+  const files = paperWithDependencies([
+    // Canonical P1-01 false positive: slf4j 1.7.36 is not an MC 1.7 dependency.
+    'implementation("org.slf4j:slf4j-api:1.7.36")',
+    // Both tokens used to pass the broken major/minor guards and produce
+    // DEPENDENCY_VERSION warnings for a 1.21.8 target.
+    'implementation("net.minecraft:guard-low:1.5.0")',
+    'implementation("net.minecraft:guard-high:26.13.0")',
+  ])
+  await withFixture(files, async (projectDir) => {
+    const result = await auditProject({ projectDir, platform: 'paper', minecraftVersion: '1.21.8' })
+
+    const dependencyFindings = result.findings.filter((finding) => finding.code === 'DEPENDENCY_VERSION')
+    assert.deepEqual(dependencyFindings, [])
+  })
+})
+
+test('dependency audit still reports a Minecraft-pinned coordinate on an old line', async () => {
+  const files = paperWithDependencies(['implementation("net.minecraft:legacy-api:1.12.2")'])
+  await withFixture(files, async (projectDir) => {
+    const result = await auditProject({ projectDir, platform: 'paper', minecraftVersion: '1.21.8' })
+
+    const finding = result.findings.find((item) => item.code === 'DEPENDENCY_VERSION')
+    assert.ok(finding, 'expected DEPENDENCY_VERSION for an old MC-pinned dependency')
+    assert.equal(finding.severity, 'warning')
+    assert.match(finding.message, /1\.12\.2/)
+  })
+})
+
+test('JavaVersion.VERSION_1_8 is read as Java 8, not Java 1', async () => {
+  const files = legacyForgeFiles()
+  files['build.gradle'] = files['build.gradle']
+    .replace("sourceCompatibility = '1.8'", 'sourceCompatibility = JavaVersion.VERSION_1_8')
+    .replace("targetCompatibility = '1.8'", 'targetCompatibility = JavaVersion.VERSION_1_8')
+
+  await withFixture(files, async (projectDir) => {
+    const result = await auditProject({ projectDir, platform: 'forge', minecraftVersion: '1.7.10' })
+
+    assert.equal(result.target.javaVersion, 8)
+    assert.deepEqual(
+      result.findings.filter((finding) => finding.code === 'JAVA_LEVEL_MISMATCH'),
+      [],
+    )
+  })
+})
+
+function javaBlockImportFile() {
+  return text(
+    'package com.example.legacy;',
+    '',
+    'import net.minecraft.block.Block;',
+    '',
+    'public final class BlockUser {',
+    '    private Block block;',
+    '}',
+  )
+}
+
+test('Mojang Block rule does not fire for Fabric, where net.minecraft.block.Block is valid Yarn', async () => {
+  const files = paperFiles()
+  files['src/main/java/com/example/cleanpaper/BlockUser.java'] = javaBlockImportFile()
+
+  await withFixture(files, async (projectDir) => {
+    const result = await auditProject({ projectDir, platform: 'fabric', minecraftVersion: '1.21.11' })
+
+    const mojangFindings = result.findings.filter(
+      (finding) => finding.code === 'REMOVED_API' && finding.message.includes('net.minecraft.block.Block'),
+    )
+    assert.deepEqual(mojangFindings, [])
+  })
+})
+
+test('Mojang Block rule does not fire for Forge 1.16.5, whose official mappings still use it', async () => {
+  const files = forgeMetadataFiles()
+  files['src/main/java/com/example/legacy/BlockUser.java'] = javaBlockImportFile()
+
+  await withFixture(files, async (projectDir) => {
+    const result = await auditProject({ projectDir, platform: 'forge', minecraftVersion: '1.16.5' })
+
+    const mojangFindings = result.findings.filter(
+      (finding) => finding.code === 'REMOVED_API' && finding.message.includes('net.minecraft.block.Block'),
+    )
+    assert.deepEqual(mojangFindings, [])
+  })
+})
+
+test('Mojang Block rule still fires for Forge 1.20.1', async () => {
+  const files = forgeMetadataFiles()
+  files['src/main/java/com/example/legacy/BlockUser.java'] = javaBlockImportFile()
+
+  await withFixture(files, async (projectDir) => {
+    const result = await auditProject({ projectDir, platform: 'forge', minecraftVersion: '1.20.1' })
+
+    const finding = result.findings.find(
+      (item) => item.code === 'REMOVED_API' && item.message.includes('net.minecraft.block.Block'),
+    )
+    assert.ok(finding)
+    assert.equal(finding.severity, 'blocker')
+    assert.equal(finding.file, 'src/main/java/com/example/legacy/BlockUser.java')
+  })
+})

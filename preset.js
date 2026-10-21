@@ -93,7 +93,7 @@ export const PRESET_DEFINITIONS = [minecraftPreset, minecraftArchitectPreset, ..
  */
 export async function apply(ctx, config = {}) {
   const logger = ctx.logger ?? console
-  const declared = registerPresetDefinitions({
+  const declared = await registerPresetDefinitions({
     registry: ctx.agentPresets,
     definitions: PRESET_DEFINITIONS,
     effect: (body) => ctx.effect(body),

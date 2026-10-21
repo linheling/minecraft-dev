@@ -150,6 +150,16 @@ test('appServerArgv and appServerCommand describe a real `codex app-server --std
   assert.equal(appServerCommand('/usr/bin/codex', { platform: 'linux' }), "'/usr/bin/codex' app-server --stdio")
 })
 
+test('appServerArgv wraps a Windows .cmd shim through cmd.exe', () => {
+  const argv = appServerArgv('C:\\tools\\codex.cmd', { platform: 'win32' })
+  assert.equal(argv[0], 'cmd.exe')
+  assert.deepEqual(argv.slice(1, 4), ['/d', '/s', '/c'])
+  assert.match(argv[4], /^""C:\\tools\\codex\.cmd" app-server --stdio"$/)
+  // POSIX and .exe paths stay shell-free.
+  assert.deepEqual(appServerArgv('/usr/bin/codex', { platform: 'linux' }), ['/usr/bin/codex', 'app-server', '--stdio'])
+  assert.deepEqual(appServerArgv('C:\\tools\\codex.exe', { platform: 'win32' }), ['C:\\tools\\codex.exe', 'app-server', '--stdio'])
+})
+
 // ---------------------------------------------------------------------------
 // happy path
 // ---------------------------------------------------------------------------
@@ -325,6 +335,23 @@ test('runCodexAppServer fails fast when the app-server child is gone', async () 
   }
 })
 
+test('runCodexAppServer turns an async child error into a failure, not a crash', async () => {
+  const server = new FakeAppServer({ neverCompletes: true })
+  const { dir, promptFile } = await promptFixture()
+  try {
+    const promise = runCodexAppServer({
+      projectDir: dir, promptFile, timeoutMs: 5000, tailChars: 1000, internals: internals(server),
+    })
+    await waitFor(() => server.ofMethod('turn/start').length === 1, 'turn/start')
+    server.emit('error', new Error('spawn ENOENT'))
+    const result = await promise
+    assert.equal(result.exitCode, 1)
+    assert.match(result.failure, /codex app-server failed: spawn ENOENT/)
+  } finally {
+    await rm(dir, { recursive: true, force: true })
+  }
+})
+
 test('runCodexAppServer refuses to run without a Codex CLI and validates its own options', async () => {
   const { dir, promptFile } = await promptFixture()
   try {
@@ -447,4 +474,36 @@ test('renderAppServerResult renders a thread-less, answer-less run', () => {
   assert.match(text, /no final_answer agentMessage was observed/)
   assert.match(text, /--- 失败 ---\nboom/)
   assert.match(text, /\n\[exit code: 1\]$/)
+})
+
+test('runCodexAppServer spawns a discovered .cmd shim through cmd.exe', async () => {
+  const server = new FakeAppServer({ answer: 'done' })
+  const { dir, promptFile } = await promptFixture()
+  try {
+    const result = await runCodexAppServer({
+      projectDir: dir,
+      promptFile,
+      timeoutMs: 5000,
+      tailChars: 2000,
+      internals: internals(server, {
+        discovery: {
+          home: 'C:\\Users\\tester',
+          env: { PATH: 'C:\\tools' },
+          exists: (candidate) => candidate === 'C:\\tools\\codex.cmd',
+          listDir: () => [],
+        },
+      }),
+    })
+
+    assert.equal(server.spawn.program, 'cmd.exe')
+    assert.deepEqual(server.spawn.args.slice(0, 3), ['/d', '/s', '/c'])
+    assert.match(server.spawn.args[3], /C:\\tools\\codex\.cmd/)
+    assert.equal(server.spawn.options.windowsVerbatimArguments, true)
+    assert.equal(result.executable, 'C:\\tools\\codex.cmd')
+    assert.equal(result.executableSource, 'PATH')
+    assert.equal(result.exitCode, 0)
+    assert.match(result.answer, /done/)
+  } finally {
+    await rm(dir, { recursive: true, force: true })
+  }
 })

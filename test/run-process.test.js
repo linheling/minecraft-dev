@@ -206,3 +206,35 @@ test('killTree does not fall back when win32 taskkill succeeds', () => {
   })
   assert.deepEqual(killed, [])
 })
+
+test('killTree honours an explicit SIGKILL override on posix', () => {
+  const calls = []
+  killTree(
+    'linux',
+    321,
+    { processKillImpl: (pid, signal) => calls.push([pid, signal]) },
+    { signal: 'SIGKILL' },
+  )
+  assert.deepEqual(calls, [[-321, 'SIGKILL']])
+})
+
+test('runProcess escalates SIGTERM to SIGKILL and settles when close never arrives', async () => {
+  const fake = fakeChild()
+  const kills = []
+  const result = await runProcess(baseOptions({
+    timeoutMs: 5,
+    internals: {
+      platform: 'linux',
+      spawnImpl: () => fake.child,
+      killTreeImpl: (platform, pid, options) => kills.push([platform, pid, options?.signal ?? 'SIGTERM']),
+      killEscalationMs: 10,
+      killSettleMs: 10,
+    },
+  }))
+  // The child never emits close (a grandchild kept the pipe open): the runner
+  // must force-kill the group and still resolve instead of hanging forever.
+  assert.equal(result.timedOut, true)
+  assert.equal(result.exitCode, null)
+  assert.equal(result.signal, 'SIGKILL')
+  assert.deepEqual(kills, [['linux', 4242, 'SIGTERM'], ['linux', 4242, 'SIGKILL']])
+})

@@ -166,8 +166,8 @@ export function apply(ctx, config = {}) {
       + 'projectDir must be the scaffolded project root containing gradlew.',
     parameters: {
       projectDir: { type: 'string', required: true, description: 'Absolute path of the Gradle project root (must contain gradlew or gradlew.bat).' },
-      task: { type: 'string', required: true, description: 'Gradle task to run, e.g. build, clean, runClient, runServer, runData.' },
-      args: { type: 'array', items: { type: 'string' }, description: 'Extra arguments appended to the task, e.g. --no-daemon, -Pfoo=bar.' },
+      task: { type: 'string', required: true, description: 'Gradle task to run, e.g. build, clean, runClient, runServer, runData. No whitespace or shell metacharacters.' },
+      args: { type: 'array', items: { type: 'string' }, description: 'Extra arguments appended to the task, e.g. --no-daemon, -Pfoo=bar. No empty strings, control characters, or cmd.exe metacharacters on Windows.' },
       timeoutMs: { type: 'number', description: 'Timeout in milliseconds; defaults to the plugin config gradleTimeoutMs (600000). Kills the whole process tree on expiry.' },
       description: { type: 'string', description: 'Short human description for the terminal card.' },
     },

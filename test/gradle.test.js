@@ -69,8 +69,46 @@ test('gradleArgv wraps the bat through cmd.exe on win32 and quotes args', () => 
     ['cmd.exe', '/d', '/s', '/c', '""C:\\proj\\gradlew.bat" build "--no-daemon" "-Pkey=value""'],
   )
   assert.deepEqual(
-    gradleArgv({ platform: 'win32', projectDir: 'C:/proj', task: 'build', args: ['a b"c'] }),
-    ['cmd.exe', '/d', '/s', '/c', '""C:\\proj\\gradlew.bat" build "a b\\"c""'],
+    gradleArgv({ platform: 'win32', projectDir: 'C:/proj', task: 'build', args: ['a b'] }),
+    ['cmd.exe', '/d', '/s', '/c', '""C:\\proj\\gradlew.bat" build "a b""'],
+  )
+})
+
+test('gradleArgv rejects cmd.exe metacharacters instead of escaping them', () => {
+  // cmd.exe does not understand node's `\"` escaping, so a quote must never
+  // reach the child; the old replace(/"/g, '\\"') was an injection vector.
+  assert.throws(
+    () => gradleArgv({ platform: 'win32', projectDir: 'C:/proj', task: 'build', args: ['a b"c'] }),
+    /cmd\.exe metacharacters/,
+  )
+  assert.throws(
+    () => gradleArgv({ platform: 'win32', projectDir: 'C:/proj', task: 'build', args: ['x" & calc'] }),
+    /cmd\.exe metacharacters/,
+  )
+  assert.throws(
+    () => gradleArgv({ platform: 'win32', projectDir: 'C:/proj', task: 'build', args: ['%PATH%'] }),
+    /cmd\.exe metacharacters/,
+  )
+  assert.throws(
+    () => gradleArgv({ platform: 'win32', projectDir: 'C:/proj', task: 'build & calc' }),
+    /whitespace|metacharacters/,
+  )
+  assert.throws(
+    () => gradleArgv({ platform: 'win32', projectDir: 'C:/proj', task: 'build', args: ['line\nbreak'] }),
+    /control characters/,
+  )
+  assert.throws(
+    () => gradleArgv({ platform: 'win32', projectDir: 'C:/proj', task: '', args: [] }),
+    /non-empty/,
+  )
+  assert.throws(
+    () => gradleArgv({ platform: 'win32', projectDir: 'C:/proj', task: 'build', args: [''] }),
+    /empty argument/,
+  )
+  // POSIX passes argv without a shell, so shell-shaped values stay usable.
+  assert.deepEqual(
+    gradleArgv({ platform: 'linux', task: 'build', args: ['-Pfoo=a&b'] }),
+    ['./gradlew', 'build', '-Pfoo=a&b'],
   )
 })
 
@@ -286,6 +324,20 @@ test('runGradle rejects when the signal is already aborted before spawn', async 
       internals: { platform: 'linux', spawnImpl: () => { throw new Error('must not spawn') } },
     }),
     /aborted before spawn/,
+  )
+})
+
+test('runGradle rejects injection-shaped args before spawning', async () => {
+  await assert.rejects(
+    runGradle({
+      projectDir: '/p',
+      task: 'build',
+      args: ['x" & calc'],
+      timeoutMs: 5000,
+      tailChars: 1000,
+      internals: { platform: 'win32', spawnImpl: () => { throw new Error('must not spawn') } },
+    }),
+    /cmd\.exe metacharacters/,
   )
 })
 

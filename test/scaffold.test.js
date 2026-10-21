@@ -482,3 +482,84 @@ test('scaffold spigot 1.7.10 uses the vendored jar and ships the libs README', a
     await rm(target, { recursive: true, force: true })
   }
 })
+
+// ---------------------------------------------------------------------------
+// P0-01 regression: a line-form version must be resolved to the line's pinned
+// default before it reaches a Gradle/Maven coordinate. Before the fix,
+// `fabric 1.21.x` emitted `minecraft:1.21.x`, `paper 1.20` emitted
+// `paper-api:1.20-R0.1-SNAPSHOT`, and `forge 1.20` emitted `forge:1.20-47.3.0`.
+// ---------------------------------------------------------------------------
+
+test('scaffoldProject normalizes line-form versions before rendering', async () => {
+  const root = await makeTempDir()
+  const cases = [
+    {
+      platform: 'fabric',
+      input: '1.21.x',
+      expected: '1.21.11',
+      checks: [
+        ['build.gradle', /minecraft "com\.mojang:minecraft:1\.21\.11"/],
+        ['src/main/resources/fabric.mod.json', /"minecraft": "~1\.21\.11"/],
+      ],
+    },
+    {
+      platform: 'paper',
+      input: '1.20',
+      expected: '1.20.6',
+      checks: [
+        ['build.gradle.kts', /paper-api:1\.20\.6-R0\.1-SNAPSHOT/],
+        ['src/main/resources/plugin.yml', /api-version: "1\.20"/],
+      ],
+    },
+    {
+      platform: 'paper',
+      input: '1.21.x',
+      expected: '1.21.8',
+      checks: [['build.gradle.kts', /paper-api:1\.21\.8-R0\.1-SNAPSHOT/]],
+    },
+    {
+      platform: 'paper',
+      input: '26.x',
+      expected: '26.2',
+      checks: [
+        ['build.gradle.kts', /paper-api:26\.2\.build\.\+/],
+        ['src/main/resources/plugin.yml', /api-version: "26\.2"/],
+      ],
+    },
+    {
+      platform: 'forge',
+      input: '1.20',
+      expected: '1.20.1',
+      checks: [
+        ['build.gradle', /net\.minecraftforge:forge:1\.20\.1-47\.3\.0/],
+        ['gradle.properties', /minecraft_version=1\.20\.1/],
+      ],
+    },
+    {
+      platform: 'spigot',
+      input: '1.12',
+      expected: '1.12.2',
+      checks: [['build.gradle', /org\.spigotmc:spigot-api:1\.12\.2-R0\.1-SNAPSHOT/]],
+    },
+  ]
+
+  try {
+    for (const [index, { platform, input, expected, checks }] of cases.entries()) {
+      const target = path.join(root, `${platform}-${input.replace(/\./g, '_')}-${index}`)
+      const result = await scaffoldProject({
+        platform,
+        targetDir: target,
+        name: 'probe',
+        packageName: 'com.example.probe',
+        minecraftVersion: input,
+      })
+      assert.equal(result.minecraftVersion, expected, `${platform} ${input} result version`)
+      for (const [rel, pattern] of checks) {
+        const content = await readFile(path.join(result.projectDir, rel), 'utf8')
+        assert.match(content, pattern, `${platform} ${input} -> ${rel}`)
+      }
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})

@@ -36,7 +36,11 @@ test('validateMcVersion accepts full, line, and x forms', () => {
   assert.equal(validateMcVersion('1.21.8'), '1.21.8')
   assert.equal(validateMcVersion('1.21.x'), '1.21.x')
   assert.equal(validateMcVersion('26.2'), '26.2')
+  // The year-based line may be requested as 26.x; P0-01 normalizes it to the
+  // 26 line's pinned default (26.2) before rendering.
+  assert.equal(validateMcVersion('26.x'), '26.x')
   assert.throws(() => validateMcVersion('1.21.8.1'), /invalid Minecraft version/)
+  assert.throws(() => validateMcVersion('1.x.5'), /invalid Minecraft version/)
   assert.throws(() => validateMcVersion('latest'), /invalid Minecraft version/)
 })
 
