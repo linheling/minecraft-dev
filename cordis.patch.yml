@@ -34,8 +34,15 @@
     # maxDepth: 1 = 子代理自身位于 depth 1，允许首层委派；孙代（depth 2）被拒。
     # 该键在三条线（0.1.5 / 0.1.7 / 0.2.x）上都存在，故保留。
 
+    # 入口级 inject：`agentPreset` 一旦配置，tool-subagent 的 apply() 会要求
+    # `agentPresets` 服务已经存在（0.2.1-rc.2 的硬检查），并在 validate() 里
+    # readDocument() 每个预设。四行若不等服务就挂载，会稳定报
+    # "agent preset selection requires the agent-presets service"；
+    # 服务与预设由 @deepseek-ai/dsh-agent-preset-registry + minecraft-preset
+    # 在启动后异步发布，所以把四行压进服务就绪之后；关开一次能恢复正是这个竞态。
     - id: subagent-mc-plan
       name: '@deepseek-ai/dsh-tool-subagent'
+      inject: ['agentPresets']
       config:
         provider: spawn
         toolName: subagent_mc_plan
@@ -44,6 +51,7 @@
 
     - id: subagent-mc-skeleton
       name: '@deepseek-ai/dsh-tool-subagent'
+      inject: ['agentPresets']
       config:
         provider: spawn
         toolName: subagent_mc_skeleton
@@ -52,6 +60,7 @@
 
     - id: subagent-mc-content
       name: '@deepseek-ai/dsh-tool-subagent'
+      inject: ['agentPresets']
       config:
         provider: spawn
         toolName: subagent_mc_content
@@ -60,6 +69,7 @@
 
     - id: subagent-mc-verify
       name: '@deepseek-ai/dsh-tool-subagent'
+      inject: ['agentPresets']
       config:
         provider: spawn
         toolName: subagent_mc_verify

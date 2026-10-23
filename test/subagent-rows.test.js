@@ -38,13 +38,17 @@ const { rolePresets, ROLE_PRESET_IDS, ROLE_TOOL_NAMES } = await import(pathToFil
  * mapping entries, so an indentation scan is enough — the repo keeps no YAML
  * dependency on purpose.
  */
-function hostRow(rowId) {
+function hostBlock(rowId) {
   const lines = patch.split('\n')
   const start = lines.findIndex(line => line.trim() === `- id: ${rowId}`)
   assert.notEqual(start, -1, `cordis.patch.yml must declare ${rowId}`)
   const rest = lines.slice(start + 1)
   const stop = rest.findIndex(line => /^\s{4}- id: /.test(line))
-  const block = stop === -1 ? rest : rest.slice(0, stop)
+  return stop === -1 ? rest : rest.slice(0, stop)
+}
+
+function hostRow(rowId) {
+  const block = hostBlock(rowId)
   const configAt = block.findIndex(line => line.trim() === 'config:')
   assert.notEqual(configAt, -1, `${rowId} must keep a config block`)
   const config = {}
@@ -55,6 +59,14 @@ function hostRow(rowId) {
   }
   return config
 }
+
+test('the four host rows wait for the agentPresets service before applying', () => {
+  for (const rowId of HOST_ROWS) {
+    const block = hostBlock(rowId).join('\n')
+    assert.match(block, /^\s{6}inject:\s*\['agentPresets'\]$/m,
+      `${rowId} must declare entry-level inject: ['agentPresets']; without it tool-subagent applies before the preset service exists and the row shows 异常 until toggled`)
+  }
+})
 
 test('the four host rows use only the 0.2.1 tool-subagent config keys', () => {
   for (const rowId of HOST_ROWS) {

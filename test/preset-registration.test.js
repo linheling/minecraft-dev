@@ -55,6 +55,26 @@ test('registerPresetDefinitions declares every preset in order and owns each one
   assert.match(log.lines[1], /registered agent preset 'minecraft-architect' \(19 rows\)/)
 })
 
+test('every declaration reaches the registry before the first activation resolves', async () => {
+  const calls = []
+  const releases = []
+  const pending = registerPresetDefinitions({
+    registry: {
+      register: (definition) => {
+        calls.push(definition.id)
+        return new Promise((resolve) => { releases.push(resolve) })
+      },
+    },
+    definitions: DEFINITIONS,
+    effect: (body) => { body(); return () => {} },
+    logger: logger(),
+  })
+  assert.deepEqual(calls, ['minecraft', 'minecraft-architect'],
+    'register() must be called for every preset synchronously, before any activation awaits')
+  for (const release of releases) release(() => {})
+  assert.equal(await pending, true)
+})
+
 test('a register() that throws is reported, and the other preset still loads', async () => {
   const log = logger()
   const registered = []
