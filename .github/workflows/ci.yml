@@ -79,7 +79,12 @@ jobs:
           @deepseek-ai/dsh-tools@0.2.1-rc.2
           @deepseek-ai/dsh-skill@0.2.1-rc.2
           @deepseek-ai/schemastery@3.18.5
-      - run: REQUIRE_PLUGIN_DEPS=1 node --test test/modules.test.js
+      # tools-schema.test.js actually calls `apply()`, which is where defineTool
+      # compiles every output schema. Importing the entry points alone cannot see
+      # a schema the compiler rejects: v0.16.0 shipped mc_port_audit with object
+      # nodes missing `additionalProperties`, and the whole minecraft-tools row
+      # failed to activate in the harness while every job here stayed green.
+      - run: REQUIRE_PLUGIN_DEPS=1 node --test test/modules.test.js test/tools-schema.test.js
       # The checkout-based import above cannot catch a package that forgets a
       # directory in package.json.files. Pack the real tarball, unpack it, assert
       # the bundled assets/preset files are present, then import all four entry
@@ -111,6 +116,20 @@ jobs:
             await import(pathToFileURL(`${root}/${entry}`).href)
             console.log(`loaded ${entry}`)
           }
+          // Register the tools from the PACKED copy: defineTool compiles the
+          // output schemas here, so a shipped tarball with an unsupported schema
+          // fails the job instead of failing activation on a user's machine.
+          const toolsEntry = await import(pathToFileURL(`${root}/tools.js`).href)
+          const registered = []
+          toolsEntry.apply(
+            { tools: { register: (definition) => registered.push(definition) } },
+            { gradleTimeoutMs: 600_000, outputTailChars: 12_000 },
+          )
+          const names = registered.map((definition) => definition.name)
+          if (names.join(',') !== 'mc_scaffold,mc_gradle,mc_port_audit') {
+            throw new Error(`packed tools.js registered ${JSON.stringify(names)}`)
+          }
+          console.log(`registered ${names.join(', ')}`)
           NODE
       - name: clean pack artifacts
         if: always()

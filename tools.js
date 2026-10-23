@@ -241,14 +241,24 @@ export function apply(ctx, config = {}) {
       },
     },
     output: {
+      // Every object node needs an explicit `additionalProperties` boolean: the
+      // harness value-schema compiler rejects one without it, and defineTool
+      // runs that compile the moment this entry activates. The nested shapes are
+      // produced by auditProject and are opaque here, so they stay open; the root
+      // stays closed because auditProject returns exactly these five keys.
       schema: {
         type: 'object',
+        additionalProperties: false,
         properties: {
           ok: { type: 'boolean', required: true },
-          project: { type: 'object', required: true },
-          target: { type: 'object', required: true },
-          findings: { type: 'array', required: true, items: { type: 'object' } },
-          summary: { type: 'object', required: true },
+          project: { type: 'object', additionalProperties: true, required: true },
+          target: { type: 'object', additionalProperties: true, required: true },
+          findings: {
+            type: 'array',
+            required: true,
+            items: { type: 'object', additionalProperties: true },
+          },
+          summary: { type: 'object', additionalProperties: true, required: true },
         },
       },
       render: (_args, value) => [{ type: 'text', text: renderAuditResult(value) }],
