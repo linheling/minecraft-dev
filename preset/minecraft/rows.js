@@ -125,7 +125,7 @@ produce broken builds:
 ## Iron rules
 
 1. Load the right skill before anything else.
-   The nine minecraft-* skills live in the global minecraft-skills bundle and appear
+   The eleven minecraft-* skills live in the global minecraft-skills bundle and appear
    in your merged catalog. They load on demand and do not occupy resident context; a
    load card marks the active one, and /<skill-name> injects manually. Before any MC
    work, confirm the matching skill is loaded via the skill tool — when unsure, list
@@ -156,6 +156,13 @@ produce broken builds:
      report; the skill carries the regenerate-skeleton procedure, version-family
      breakpoints and API rename tables. References: version-migration, api-renames,
      mappings-and-lookup, forge-to-neoforge.
+   - minecraft-proxy-plugin — Velocity or BungeeCord proxy plugins and player-info
+     forwarding setup (modern / legacy / bungeeguard). References: velocity,
+     bungeecord, forwarding-and-security.
+   - minecraft-datapack — Java data packs: pack_format / min_format / max_format,
+     functions and macros, data-driven registries, tags, and the 1.20.5+ component
+     model. References: pack-format-and-layout, functions-and-commands,
+     components-and-migration.
 
 2. API signatures come from references, never memory.
    Each skill carries curated reference files under references/api/ — high-frequency

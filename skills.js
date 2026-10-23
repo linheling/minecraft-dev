@@ -56,6 +56,14 @@ const SKILLS = [
     name: 'minecraft-porting',
     description: 'Plan and execute cross-version or cross-loader ports of Minecraft mods and plugins: the regenerate-skeleton-then-port-module-by-module procedure, version-family breakpoints (Java/Gradle/mappings/metadata per era from 1.7.10 to 26.x), API rename tables (registries, networking, NBT to DataComponents, ResourceLocation), mapping lookups (MCP/SRG/official/Yarn), and a Forge 1.20.1 to NeoForge 1.21.x migration guide with side-by-side snippets. Use when upgrading a project to a newer Minecraft version, moving between Forge and NeoForge (or Fabric), or asked whether an existing project can be ported. Pair with the mc_port_audit tool for a read-only blocker report before editing.',
   },
+  {
+    name: 'minecraft-proxy-plugin',
+    description: 'Develop Velocity and BungeeCord proxy plugins for Minecraft 1.20.1, 1.21.x and 26.x. Covers velocity-api 4.x with the annotation processor and velocity-plugin.json, @Plugin/@Inject/@Subscribe, login and server-connect events, commands, scheduling, Adventure text and plugin messaging, the BungeeCord 26.1 API as the legacy comparison, player-info forwarding (modern/legacy/bungeeguard) with Paper backend config, and the proxy pitfalls: non-Bukkit plugins, classloader isolation, async events, shutdown order and dependency shading. Use when writing or debugging a proxy-side plugin, or when setting up a Velocity/BungeeCord network.',
+  },
+  {
+    name: 'minecraft-datapack',
+    description: 'Develop Minecraft Java data packs for 1.20.1, 1.21.1 and 26.x. Covers pack.mcmeta pack_format values (15 / 48 / 121) and min_format/max_format, the plural-to-singular folder rename in 1.21, functions and macros, the load/tick tags, execute/return/schedule, data-driven registries (recipe, loot_table, advancement, predicate, item_modifier, damage_type, enchantment, jukebox_song, variants) and registry tags, the 1.20.5+ data component model with the 1.20.1 NBT migration, /datapack and /reload limits, and JSON/path debugging. Use when creating or porting a data pack, or when a pack loads but does nothing.',
+  },
 ]
 
 const candidates = SKILLS.map(skill => {

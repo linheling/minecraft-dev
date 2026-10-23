@@ -8,7 +8,7 @@ Minecraft 开发插件 for [DeepSeek Harness](https://github.com/deepseek-ai/dee
 
 ### English TL;DR
 
-Minecraft development plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`): **9 model-loaded skills + 4 tools** covering MC **1.7.10 – 26.3** on **Paper/Spigot**, **Fabric**, **Forge** and **NeoForge**.
+Minecraft development plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`): **11 model-loaded skills + 4 tools** covering MC **1.7.10 – 26.3** on **Paper/Spigot**, **Fabric**, **Forge** and **NeoForge**.
 
 - `mc_scaffold` — generate a buildable project in 19 pinned platform/version combinations (Gradle wrapper, toolchain and metadata included).
 - `mc_gradle` — run `gradlew <task>` with a terminal card, timeout tree-kill and head/tail output.
@@ -35,19 +35,21 @@ Tests: `npm test` (258 cases; Node 22.19+ / 24), syntax gate: `npm run check:syn
 
 ## 功能一览
 
-### 9 个技能（模型按需加载，不占常驻上下文）
+### 11 个技能（模型按需加载，不占常驻上下文）
 
 | 技能 | 内容 |
 |---|---|
 | `minecraft-java-build` | 全时代 Java/Gradle 构建知识：JDK 配对表、wrapper、foojay toolchain、依赖仓库、常见坑；附崩溃/日志诊断与外部资源索引 2 份参考 |
 | `minecraft-paper-plugin` | Paper/Spigot 现代线插件（1.20.x / 1.21.x / 26.x）+ 10 份 API 参考（含 NMS/ProtocolLib） |
-| `minecraft-fabric-mod` | Fabric 模组（loom/loader/fabric-api/yarn 配合）+ 4 份 API 参考 |
-| `minecraft-forge-mod` | 传统 Forge 四时代（1.7.10 FG1.2 fork / 1.12.2 FG3 / 1.16.5 FG5 / 1.20.1 FG6）+ 5 份 API 参考（时代 + 网络 + 能力/能量） |
-| `minecraft-neoforge-mod` | NeoForge（1.20.1 legacyforge / **1.21.1** / 1.21.x / 26.2 stable + **26.3 beta-only**）+ 6 份 API 参考（含网络与能力/DataComponent） |
+| `minecraft-fabric-mod` | Fabric 模组（loom/loader/fabric-api/yarn 配合）+ 5 份 API 参考（含渲染/GUI） |
+| `minecraft-forge-mod` | 传统 Forge 四时代（1.7.10 FG1.2 fork / 1.12.2 FG3 / 1.16.5 FG5 / 1.20.1 FG6）+ 7 份 API 参考（时代 + 网络 + 能力/能量 + Mixin/AT + 渲染） |
+| `minecraft-neoforge-mod` | NeoForge（1.20.1 legacyforge / **1.21.1** / 1.21.x / 26.2 stable + **26.3 beta-only**）+ 7 份 API 参考（含网络、能力/DataComponent、世界生成/AI） |
 | `minecraft-spigot-legacy` | 1.7.10 / 1.12.2 老线 Bukkit 插件 + Cauldron/Thermos/Mohist 混合服说明 + 2 份老线 API 参考 |
 | `minecraft-major-mods` | 大型模组附属开发：28 个模组条目（1.7.10×10 / 1.12.2×8 / 现代×10，含拔刀剑、神秘时代、匠魂、植物魔法、Create、Botania、AE2、Mekanism、Curios、JEI/REI 等），每条含核实过的 curse.maven 坐标与扩展点 |
 | `minecraft-intake` | **任务信息核对（v0.7）**：用户请求写插件/mod/附属但信息不足时，按场景批量提问（版本/平台/加载器/核心/混合端/兼容性/部署），一次问全、不重复问、授权默认 |
 | `minecraft-porting` | **跨版本 / 跨加载器移植（v0.11）**：再生骨架 + 逐模块移植工序、版本族破坏点速查（1.7.10→26.x）、API 改名表（注册/网络/NBT→DataComponents/ResourceLocation）、MCP/SRG/official/Yarn 映射查询、Forge 1.20.1→NeoForge 1.21.x 左右对照；配合 `mc_port_audit` 先出只读阻断清单 |
+| `minecraft-proxy-plugin` | **代理端插件（v0.16）**：Velocity 4.3（Java 25、注解处理器、`velocity-plugin.json`、事件/命令/调度）+ BungeeCord 26.1（Java 17、legacy 对照）+ modern/legacy/bungeeguard 转发与 Paper 后端配置 + 3 份 API 参考 |
+| `minecraft-datapack` | **数据包（v0.16）**：1.20.1/1.21.1/26.x 三线 `pack_format`（15/48/121）与 `min_format`/`max_format`、目录单复数、函数/宏/命令、数据驱动注册表与标签、1.20.5+ 组件（1.20.1 NBT 迁移）+ 3 份参考 |
 
 ### 4 个工具
 
@@ -73,7 +75,7 @@ Tests: `npm test` (258 cases; Node 22.19+ / 24), syntax gate: `npm run check:syn
 
 | 预设 | 内容 |
 |---|---|
-| `minecraft`（Minecraft 专家） | 一键切换的专精 agent：standard 全工具集（shell / 文件 / 检索 / 技能 / 计划 / 目标 / 子代理 / 工作流）+ 中文专家人设 + 全局可见的 9 个技能与 4 个内置子代理 subagent_mc_plan/skeleton/content/verify（v0.6.0 起装完插件重启 dsh 后**自动安装**到 `$DSH_HOME/.agent-presets/minecraft/`，见下方「Minecraft 专家 agent 的安装」） |
+| `minecraft`（Minecraft 专家） | 一键切换的专精 agent：standard 全工具集（shell / 文件 / 检索 / 技能 / 计划 / 目标 / 子代理 / 工作流）+ 中文专家人设 + 全局可见的 11 个技能与 4 个内置子代理 subagent_mc_plan/skeleton/content/verify（v0.6.0 起装完插件重启 dsh 后**自动安装**到 `$DSH_HOME/.agent-presets/minecraft/`，见下方「Minecraft 专家 agent 的安装」） |
 | `minecraft-architect`（**Minecraft 架构师（Astra神的瞥视）**，v0.8.0） | 专家预设**逐字节复制**后只多两处：一段人设 + 一行 `minecraft-dev/codex` 模块（注册 `mc_codex` 工具与 `minecraft-codex-architect` 技能）。因此专家预设的工具/技能目录完全不变，只有本预设能看到 `mc_codex` |
 
 #### Minecraft 架构师：Codex 做架构，DSH 填内容（v0.8.0）
@@ -104,7 +106,7 @@ Tests: `npm test` (258 cases; Node 22.19+ / 24), syntax gate: `npm run check:syn
 
 ### 方式一：npm 安装（先确认 registry 版本）
 
-> **npm latest 可能落后于仓库**：截至 2026-10-21，registry `latest` 为 `0.10.1`，仓库已到 `0.14.0`；需要 `mc_port_audit`、`minecraft-porting` 或 26.3 支持时，请用方式二/三，或先 `npm view minecraft-dev version` 确认新版已发布。
+> **npm latest 可能落后于仓库**：截至 2026-10-23，registry `latest` 为 `0.10.1`，仓库已到 `0.16.0`；需要 `mc_port_audit`、`minecraft-porting`、代理端/数据包技能或 26.3 支持时，请用方式二/三，或先 `npm view minecraft-dev version` 确认新版已发布。
 
 ```sh
 dsh plugin --profile web add minecraft-dev
@@ -190,7 +192,7 @@ cp -r <minecraft-dev 仓库>/preset/minecraft ~/.dsh/.agent-presets/
 - 发现是**热扫描**：运行中的 dsh 无需重启即可看到新 preset；但**新会话**才生效。
 - Windows 用户：可用 PowerShell `Copy-Item -Recurse` 等价命令。
 - 切换位置：Web UI **新建会话**的 preset 选择器选「Minecraft 专家」。
-- 验证：新建会话选该 preset，问「列出你能用的技能」，应返回 9 个 minecraft-* 技能 + mc_scaffold/mc_gradle/mc_port_audit + 4 个内置子代理 subagent_mc_* + subagent/subagent_fork/tool-workflow/ralph 工具；问「你是什么模型、工作目录在哪」，应回答本会话模型（`{{model}}` 解析）并**调用 shell 打印当前目录**——dsh 0.2.1 起没有 `{{cwd}}` 这个变量，写它会让首轮直接失败。
+- 验证：新建会话选该 preset，问「列出你能用的技能」，应返回 11 个 minecraft-* 技能 + mc_scaffold/mc_gradle/mc_port_audit + 4 个内置子代理 subagent_mc_* + subagent/subagent_fork/tool-workflow/ralph 工具；问「你是什么模型、工作目录在哪」，应回答本会话模型（`{{model}}` 解析）并**调用 shell 打印当前目录**——dsh 0.2.1 起没有 `{{cwd}}` 这个变量，写它会让首轮直接失败。
 
 ## 使用
 
@@ -259,7 +261,7 @@ npm run smoke:build      # 生成一个真实工程用于构建冒烟（之后�
 
 本仓库没有 npm 运行时依赖（`@deepseek-ai/*` 全是 peerDependencies，由 dsh 宿主提供），所以除 `plugin-load` 外 CI 不装包，只跑脚本：
 
-- `.github/workflows/ci.yml`：push 到 `master` / PR / 手动触发。`syntax` job 跑 `check:syntax` 与 `check:unverified:gate`（UNVERIFIED 标记超过 53 即失败）；`test` job 是 `ubuntu-latest` + `windows-latest` × Node 22/24 的四格矩阵跑 `npm test`，`ubuntu`×24 那格额外跑 `test:coverage`（阈值 80%）；`plugin-load` job 用 `npm install --no-save` 装已发布的 `@deepseek-ai/*` peer 包，以 `REQUIRE_PLUGIN_DEPS=1` 跑 `modules.test.js`，再 `npm pack` 解包、校验 `assets`/`preset` 文件并 import 四个入口 —— 既把模块跳过变成硬失败，也验证真实发布包不缺文件。
+- `.github/workflows/ci.yml`：push 到 `master` / PR / 手动触发。`syntax` job 跑 `check:syntax` 与 `check:unverified:gate`（UNVERIFIED 标记超过上限，当前 55，即失败）；`test` job 是 `ubuntu-latest` + `windows-latest` × Node 22/24 的四格矩阵跑 `npm test`，`ubuntu`×24 那格额外跑 `test:coverage`（阈值 80%）；`plugin-load` job 用 `npm install --no-save` 装已发布的 `@deepseek-ai/*` peer 包，以 `REQUIRE_PLUGIN_DEPS=1` 跑 `modules.test.js`，再 `npm pack` 解包、校验 `assets`/`preset` 文件并 import 四个入口 —— 既把模块跳过变成硬失败，也验证真实发布包不缺文件。
 - `.github/workflows/doc-links.yml`：每周一 03:23 UTC + 手动触发，跑 `check-links`。外链超时/403 记 UNVERIFIABLE 不失败，404/410/5xx 或 curse.maven projectId 不符才是 BROKEN。
 - `.github/workflows/version-drift.yml`：每周一 04:17 UTC + 手动触发（可勾 strict），跑 `check:versions` 报告 `lib/versions.js` 与上游 metadata 的漂移；不可达 host 只记 unreachable，不算漂移。
 - `.github/workflows/smoke.yml`：每周一 03:17 UTC + 手动触发，并在 PR 触及 `assets/templates/**`、`lib/versions.js`、`lib/scaffold.js` 等模板/坐标相关路径时运行；用 `mc_scaffold` 生成 4 条代表线（paper 1.21.8 / fabric 26.3 / neoforge 26.3 / forge 1.12.2）并跑真实 `gradlew build`。四条腿在首次 dispatch（2026-10-21，run 39459854130）即 4/4 全绿，forge 1.12.2（Gradle 4.9 + JDK 8）也已转正为阻塞腿。

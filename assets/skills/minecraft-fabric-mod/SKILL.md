@@ -117,6 +117,7 @@ group=…
 | 注册（Registry/BuiltInRegistries/ResourceKey）、物品创建、1.21.2+ 的 setId 要求、创造栏 | `references/api/registries-and-items.md` |
 | 事件机制、CommandRegistrationCallback + brigadier 命令、常用事件模块 | `references/api/events-and-commands.md` |
 | mixin 配置 json、@Mixin/@Inject/@Redirect、注入失败排查 | `references/api/mixins.md` |
+| Screen/HUD/实体渲染器与模型层（1.20.1 `GuiGraphics`、1.21.11 `HudElementRegistry`、26.x `extractRenderState`） | `references/api/rendering-and-gui.md` |
 
 - **注册（物品/方块/事件/命令）全部放 `onInitialize()`**，不要在静态块/字段初始化里注册。
 - 本工程是 **mojmap 名**：`BuiltInRegistries.ITEM`、`Item.Properties`、`CommandSourceStack`、`Commands.literal`；社区教程常见 Yarn 名（`Registries`、`Item.Settings`、`ServerCommandSource`、`CommandManager`）要翻译后使用，**禁止混用**。
