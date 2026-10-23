@@ -79,6 +79,8 @@ mandatory=true
 - **入口与事件总线**：`@Mod` 类 + 构造器注入 mod bus（`IEventBus`）；game bus = `NeoForge.EVENT_BUS`；`@SubscribeEvent` / `@EventBusSubscriber(bus = Bus.MOD|GAME)` → `references/api/mod-bus-events.md`
 - **注册**：`DeferredRegister.create(Registries.ITEM, MODID)` + `register(modEventBus)` + `DeferredHolder` → `references/api/deferred-register.md`（1.20.1 线返回 `RegistryObject`）
 - **数据生成**：`GatherDataEvent`（mod bus）+ `DataGenerator.addProvider` + runData → `src/generated/resources` → `references/api/data-generation.md`
+- **网络**：1.20.1 用 Forge `SimpleChannel`；1.21.1 用 `RegisterPayloadHandlersEvent` + `PayloadRegistrar`；1.21.11/26.x 用 `CustomPacketPayload` + `Identifier` + 线程/大小限制 → `references/api/networking.md`
+- **能力/能量/流体/DataComponent**：1.20.1 用 Forge `ForgeCapabilities`；1.21.1 用 `Capabilities.ItemHandler/EnergyStorage/FluidHandler` + `I*`；1.21.11/26.x 用 `Capabilities.Item/Fluid/Energy` + `ResourceHandler`/`EnergyHandler`/`Transaction`；DataComponent 覆盖定义、默认值、读写与迁移 → `references/api/capabilities-and-energy.md`
 - **MC 26.2 → 26.3 移植变更（Architectury API 21.1 → 22）**：`LootEvent`、扩展菜单（`ExtendedMenuDataProvider`）、`BlockTransformerHooks`、`FuelRegistry`、`BiomeHooks`、`GenerationProperties` → `references/api/changes-26.3.md`（**用 Architectury 的工程写 26.3 前必读**。来源是 Architectury 官方移植指南，**不是** NeoForge 核心 API 的变更清单；未核实的条目标 `UNVERIFIED`）
 - 客户端/服务端隔离：`@EventBusSubscriber(dist = Dist.CLIENT)` / `@OnlyIn(Dist.CLIENT)`（见 mod-bus-events.md 第 4 节）。
 

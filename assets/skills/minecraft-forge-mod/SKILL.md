@@ -69,6 +69,10 @@ pack.mcmeta：1.16.5 为 pack_format 6、1.20.1 为 15（模板已配）。
 - **`references/api/forge-1.12.2-api.md`**：net.minecraftforge.fml.common 时代——@Mod、FML 三阶段、RegistryEvent.Register + ForgeRegistries、CommandRegistryEvent、@SidedProxy。
 - **`references/api/forge-modern-api.md`**：1.16.5 / 1.20.1——@Mod("modid") 单参形态、mod bus（FMLJavaModLoadingContext）+ game bus（MinecraftForge.EVENT_BUS）、@SubscribeEvent、DeferredRegister + RegistryObject、@EventBusSubscriber、DistExecutor、RegisterCommandsEvent、GatherDataEvent/runData。
 
+另有两份跨时代主题参考（1.12.2 / 1.16.5 / 1.20.1 同文件内分节）：
+- **`references/api/networking.md`**：1.12.2 `SimpleNetworkWrapper`、1.16.5/1.20.1 `SimpleChannel`——注册、编解码、线程切换、发送目标（玩家/追踪区块/全体）、区块安全与迁移对照。
+- **`references/api/capabilities-and-energy.md`**：`IItemHandler` / `IFluidHandler` / `IEnergyStorage`、`LazyOptional` 查询与暴露、`AttachCapabilitiesEvent`、自定义能力注册、持久化/同步/死亡保留。
+
 时代差异速记：
 - `@Mod`：1.7.10/1.12.2 是属性形态（`@Mod(modid=..., name=..., version=...)`，modid 必填）；1.16.5+ 是单参形态（`@Mod("modid")`），属性形态已废弃。
 - 事件：1.7.10/1.12.2 生命周期用 `@Mod.EventHandler` + FML*Event；1.12.2 起游戏事件（非生命周期）用 `@SubscribeEvent` 挂 `MinecraftForge.EVENT_BUS`；1.16.5+ 分 **mod bus**（加载期，注册/数据生成用）与 **game bus**（运行时事件），bus 类型 `IEventBus`（net.minecraftforge.eventbus.api）。
