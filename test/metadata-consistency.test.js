@@ -52,13 +52,18 @@ async function bundledSkills() {
 }
 
 /**
- * Extract the tool names registered by tools.js and codex.js (the architect
- * preset's mc_codex row lives in its own module).
+ * Extract the tool names declared by the plugin's tool modules. The combined
+ * component and the single-tool components share their definitions under
+ * lib/tools/, while the architect preset's mc_codex lives in codex.js.
  * @returns {Promise<string[]>} unique tool names, sorted.
  */
 async function declaredTools() {
+  const files = ['tools.js', 'codex.js']
+  for (const entry of await readdir(path.join(root, 'lib', 'tools'), { withFileTypes: true })) {
+    if (entry.isFile() && entry.name.endsWith('.js')) files.push(path.join('lib', 'tools', entry.name))
+  }
   const names = new Set()
-  for (const file of ['tools.js', 'codex.js']) {
+  for (const file of files) {
     const source = await read(file)
     for (const match of source.matchAll(/name:\s*'(mc_[a-z_]+)'/g)) names.add(match[1])
   }

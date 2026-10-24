@@ -32,6 +32,9 @@ jobs:
           node-version: 24
       - run: npm run check:syntax
       - run: npm run check:unverified:gate
+      # docs/STATE.md is the claim ledger for the 19 version lines: this fails
+      # when it drifts from lib/versions.js or when a row loses its evidence.
+      - run: npm run check:state
 
   test:
     name: tests (${{ matrix.os }}, node ${{ matrix.node }})

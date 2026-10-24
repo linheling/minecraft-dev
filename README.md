@@ -8,15 +8,16 @@ Minecraft 开发插件 for [DeepSeek Harness](https://github.com/deepseek-ai/dee
 
 ### English TL;DR
 
-Minecraft development plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`): **11 model-loaded skills + 4 tools** covering MC **1.7.10 – 26.3** on **Paper/Spigot**, **Fabric**, **Forge** and **NeoForge**.
+Minecraft development plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`): **11 model-loaded skills + 5 tools** covering MC **1.7.10 – 26.3** on **Paper/Spigot**, **Fabric**, **Forge** and **NeoForge**.
 
 - `mc_scaffold` — generate a buildable project in 19 pinned platform/version combinations (Gradle wrapper, toolchain and metadata included).
 - `mc_gradle` — run `gradlew <task>` with a terminal card, timeout tree-kill and head/tail output; preflights the wrapper and the JDK before spawning, allows one run per project, and every result carries `next` steps.
+- `mc_smoke` — **opt-in** server smoke run: start `runServer`, assert console patterns from a JSON scenario, stop the server and write evidence under `.dsh/smoke/`; proves "it actually starts", which a green build cannot.
 - `mc_port_audit` — read-only audit of an existing project against a target platform/version (Gradle, Java, metadata ranges, removed APIs → blocker/warning/info).
 - `mc_codex` — architect-preset-only bridge to the user's own Codex CLI, with a fully visible session.
 - `minecraft-porting` skill — regenerate-skeleton porting workflow, version-family breakpoints, API renames and a Forge → NeoForge guide.
 
-Tests: `npm test` (332 cases; Node 22.19+ / 24), syntax gate: `npm run check:syntax`, link check: `npm run check-links`.
+Tests: `npm test` (353 cases; Node 22.19+ / 24), syntax gate: `npm run check:syntax`, version-line state gate: `npm run check:state`, link check: `npm run check-links`.
 
 > ⚠️ **dsh 0.2.1 把子代理的 `persona` / `toolFilter` 删了**（`@deepseek-ai/dsh-tool-subagent`）：这两个键现在会**直接抛错** —— *"no longer supported; configure persona and tool plugins in an Agent Preset and select it with agentPreset (spawn only)"*；`backgroundMode` / `enableRunInBackground` 也一并消失（写了不报错，但完全不生效）。因此自 **v0.10.0** 起，A–D 四个角色的"人设 + 工具范围"改为 4 个 Agent Preset（`mc-plan` / `mc-skeleton` / `mc-content` / `mc-verify`，见 `preset/roles.js`），宿主层的 4 行只剩 `provider` / `toolName` / `agentPreset` / `maxDepth`。同时 0.2.1 的委派**一律异步**：调用立即返回 id、完成时通知，角色人设里已写明结果要放在最后一条消息里。
 >
@@ -51,16 +52,32 @@ Tests: `npm test` (332 cases; Node 22.19+ / 24), syntax gate: `npm run check:syn
 | `minecraft-proxy-plugin` | **代理端插件（v0.16）**：Velocity 4.3（Java 25、注解处理器、`velocity-plugin.json`、事件/命令/调度）+ BungeeCord 26.1（Java 17、legacy 对照）+ modern/legacy/bungeeguard 转发与 Paper 后端配置 + 3 份 API 参考 |
 | `minecraft-datapack` | **数据包（v0.16）**：1.20.1/1.21.1/26.x 三线 `pack_format`（15/48/121）与 `min_format`/`max_format`、目录单复数、函数/宏/命令、数据驱动注册表与标签、1.20.5+ 组件（1.20.1 NBT 迁移）+ 3 份参考 |
 
-### 4 个工具
+### 5 个工具
 
 | 工具 | 用途 |
 |---|---|
 | `mc_scaffold` | 一句话创建完整可构建项目：paper / fabric / forge / neoforge / spigot 五平台，自动配好构建脚本、主类、元数据、**时代对应的 Gradle wrapper** |
 | `mc_gradle` | 在项目里跑 `gradlew <task>`：终端卡片显示、超时自动杀进程树、输出头尾截断、非零退出码不报错而是可读呈现。**spawn 前先预检** wrapper 与 JDK（缺 JDK、项目 toolchain 与 PATH 上的 java 不一致、Gradle 版本低于运行 JDK 的要求、Gradle 9 需要 Java 17+ 运行时），预检结论以 `[preflight] …` 行返回；同一 `projectDir` 同时只允许一个构建（并发构建会互相破坏 cache/lock，第二个直接拒绝） |
 | `mc_port_audit` | **只读**审计现有工程迁移到目标平台/版本是否可行：核对 Gradle wrapper 版本、Java 级别、foojay、`mods.toml`/`neoforge.mods.toml` 版本范围、`plugin.yml` 的 `api-version`、构建插件类型与已移除 API（GameRegistry/SimpleNetworkWrapper/`net.minecraft.block.Block` 等），按 blocker/warning/info 输出并给修复建议 |
+| `mc_smoke` | **默认关闭的 opt-in 组件**：真起一次 `gradlew runServer`，按 JSON 场景等控制台模式（如 `Done (`、`Loading 1 mods`、插件 enable 日志），全中即 pass；超时/中止会杀进程树，并把 `results.json`、`summary.md`、`console.log` 写到 `<projectDir>/.dsh/smoke/<id>-<时间戳>/`。编译绿灯证明不了「起得来」，这一步补的正是它 |
 | `mc_codex` | **只在「Minecraft 架构师」预设里可用**：把架构 brief 写到 `<项目>/.dsh/codex-architect.md`，再用**你自己的 Codex CLI** 跑一次完全可见的架构会话——默认走官方 `codex app-server --stdio` 协议（**会话会出现在 Codex 桌面版列表里、可续聊**），也可 `mode: "exec"` 退回 `codex exec`；命令、完整输出、退出码、用时、改动文件、会话 id/线程 id、rollout 路径、token 用量全部回到会话里 |
 
-**每个工具的结果都带 `next`。** 结果末尾的 `Next steps:` 块是根据本次结果算出来的下一步（下一次工具调用、要读的文件、要加载的技能），不是静态文档：`mc_scaffold` 之后是 build → run/deploy；`mc_gradle` 失败时按输出里的错误串（JDK/toolchain、依赖解析、OOM、daemon 锁）给不同的重试建议，超时给更大的 `timeoutMs`/`--no-daemon`；`mc_port_audit` 有 blocker 时先修再重审，无 blocker 时给 `mc_scaffold` 目标骨架的调用；`mc_codex` 之后先 `mc_gradle build` 验证骨架并数 `[TODO: Agent B]` 标记。模型在绿灯结果后停住、或原样重试同一条失败构建，是这组提示要防的两个失败模式。
+**每个工具的结果都带 `next`。** 结果末尾的 `Next steps:` 块是根据本次结果算出来的下一步（下一次工具调用、要读的文件、要加载的技能），不是静态文档：`mc_scaffold` 之后是 build → run/deploy；`mc_gradle` 失败时按输出里的错误串（JDK/toolchain、依赖解析、OOM、daemon 锁）给不同的重试建议，超时给更大的 `timeoutMs`/`--no-daemon`；`mc_smoke` pass 后指向证据目录并提示「装到真服复跑」，失败时把 `console.log` 里第一个错误指出来；`mc_port_audit` 有 blocker 时先修再重审，无 blocker 时给 `mc_scaffold` 目标骨架的调用；`mc_codex` 之后先 `mc_gradle build` 验证骨架并数 `[TODO: Agent B]` 标记。模型在绿灯结果后停住、或原样重试同一条失败构建，是这组提示要防的两个失败模式。
+
+### 单工具组件（v0.17.0）
+
+默认挂载是 `minecraft-dev/tools` 一个组件（`mc_scaffold` + `mc_gradle` + `mc_port_audit`）。想只启用其中一个产品时，可以在自己的 patch 层里禁用该行、改挂单工具行（三者都由 `lib/tools/` 下的同一份定义构建，参数与输出 schema 不会漂移）：
+
+```yaml
+- id: minecraft-tools        # 先禁用合并组件，否则同名工具会注册两次
+  disabled: true
+- id: minecraft-tool-gradle  # 再打开单个工具行
+  disabled: false
+```
+
+`mc_smoke` 只有单工具组件（`minecraft-dev/tools-smoke`），默认 `disabled: true`：它要真起 JVM，属于 opt-in。启用后同样用 `timeoutMs` / `outputTailChars` 调预算与输出长度。
+
+**版本线验证状态**：19 条 (平台 × 线) 里哪些真跑过构建、哪些只有模板，记在 [`docs/STATE.md`](docs/STATE.md)；`npm run check:state` 在 CI 里校验这张表覆盖全部版本线，防止版本线增删后状态表悄悄漏行。
 
 ### 4 个内置子代理（v0.5.0，四子代理团队）
 
@@ -108,7 +125,7 @@ Tests: `npm test` (332 cases; Node 22.19+ / 24), syntax gate: `npm run check:syn
 
 ### 方式一：npm 安装（先确认 registry 版本）
 
-> **npm latest 可能落后于仓库**：截至 2026-10-23，registry `latest` 为 `0.10.1`，仓库已到 `0.16.2`；需要 `mc_port_audit`、`minecraft-porting`、代理端/数据包技能或 26.3 支持时，请用方式二/三，或先 `npm view minecraft-dev version` 确认新版已发布。
+> **npm latest 可能落后于仓库**：截至 2026-10-25，registry `latest` 为 `0.10.1`，仓库已到 `0.17.0`；需要 `mc_port_audit`、`minecraft-porting`、代理端/数据包技能或 26.3 支持时，请用方式二/三，或先 `npm view minecraft-dev version` 确认新版已发布。
 
 ```sh
 dsh plugin --profile web add minecraft-dev
@@ -294,7 +311,7 @@ npm run smoke:build      # 生成一个真实工程用于构建冒烟（之后�
 
 ## 与 MinecraftDeveloperGuide 的关系
 
-[MinecraftDeveloperGuide](https://github.com/mouse0w0/MinecraftDeveloperGuide) 是 1.12.2 时代的**链接索引**（单 README，582 行，26.x 零条目）；本仓库是**可执行的现代线工具链**（1.7.10–26.3、19 个可生成组合、332 个测试 + 4 条 CI）。两者互补：
+[MinecraftDeveloperGuide](https://github.com/mouse0w0/MinecraftDeveloperGuide) 是 1.12.2 时代的**链接索引**（单 README，582 行，26.x 零条目）；本仓库是**可执行的现代线工具链**（1.7.10–26.3、19 个可生成组合、353 个测试 + 4 条 CI）。两者互补：
 
 - 查「当年怎么写」的历史资料清单 → 看它；
 - 要「现在能直接生成并构建」→ 用本仓库的 `mc_scaffold` / `mc_gradle` / `mc_port_audit`。

@@ -8,6 +8,37 @@
         gradleTimeoutMs: 600000
         outputTailChars: 12000
 
+    # ── 单工具组件（v0.17.0，默认 disabled）────────────────────────────────
+    # 一次挂载三个工具是默认形态（上面那行）。若要只启用其中一个产品，
+    # 先禁用 minecraft-tools 行（在更高优先级的 patch 层里写
+    #   - id: minecraft-tools
+    #     disabled: true
+    # ），再把对应行改成 enabled（删除 disabled）。两套同时挂会重复注册同名
+    # 工具，所以二者只能选一。定义都在 lib/tools/，两条路径共用同一份实现。
+    - id: minecraft-tool-scaffold
+      name: minecraft-dev/tools-scaffold
+      disabled: true
+
+    - id: minecraft-tool-gradle
+      name: minecraft-dev/tools-gradle
+      disabled: true
+      config:
+        gradleTimeoutMs: 600000
+        outputTailChars: 12000
+
+    - id: minecraft-tool-audit
+      name: minecraft-dev/tools-audit
+      disabled: true
+
+    # mc_smoke 真起 JVM + 联网下载依赖，只以单工具组件形式提供，默认关闭。
+    # 想用「起服验收」时删掉下面这行的 disabled（或在自己的 patch 层里覆盖）。
+    - id: minecraft-tool-smoke
+      name: minecraft-dev/tools-smoke
+      disabled: true
+      config:
+        timeoutMs: 600000
+        outputTailChars: 12000
+
     # ── agent preset 自动安装（v0.6.0）──────────────────────────────────────
     # `dsh plugin add` 只装 cordis 插件，不会把 preset 放进 roster 扫描的
     # $DSH_HOME/.agent-presets/。此插件在每次 dsh 启动（挂载）时自动复制

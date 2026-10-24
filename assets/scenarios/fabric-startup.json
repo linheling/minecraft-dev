@@ -1,0 +1,19 @@
+{
+  "id": "fabric-startup",
+  "task": "runServer",
+  "args": ["--no-daemon"],
+  "steps": [
+    {
+      "id": "mods-loaded",
+      "expect": { "contains": ["Loading 1 mods"] }
+    },
+    {
+      "id": "server-ready",
+      "expect": { "contains": ["Done ("] }
+    },
+    {
+      "id": "no-mixin-crash",
+      "expect": { "notContains": ["MixinApplyError", "Mixin apply failed"] }
+    }
+  ]
+}

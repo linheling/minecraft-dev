@@ -1,0 +1,15 @@
+{
+  "id": "paper-startup",
+  "task": "runServer",
+  "args": ["--no-daemon"],
+  "steps": [
+    {
+      "id": "server-ready",
+      "expect": { "contains": ["Done ("] }
+    },
+    {
+      "id": "no-class-errors",
+      "expect": { "notContains": ["ClassNotFoundException", "NoClassDefFoundError"] }
+    }
+  ]
+}
