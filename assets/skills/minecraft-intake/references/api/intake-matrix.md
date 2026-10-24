@@ -39,7 +39,7 @@
 
 ## 5. 资源包任务补充（v0.7）
 
-> 注：本节提到的 `minecraft-pack-core` / `minecraft-pack-cit` / `minecraft-pack-lang` **不在本插件内置的 8 个技能里**（属外置 pack 技能）。未安装时不要假装能加载它们，按通用资源包规则回答，并明确告知用户需要安装对应技能才能拿到结构/pack_format 矩阵。
+> 注：本节提到的 `minecraft-pack-core` / `minecraft-pack-cit` / `minecraft-pack-lang` **不在本插件内置的 11 个技能里**（属外置 pack 技能）。未安装时不要假装能加载它们，按通用资源包规则回答，并明确告知用户需要安装对应技能才能拿到结构/pack_format 矩阵。
 
 资源包任务与插件/mod 的提问重点不同，多问三项：
 
