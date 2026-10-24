@@ -66,7 +66,15 @@ test('tools.js output schemas survive the harness value-schema compile', async (
       `${definition.name}: the output root must declare additionalProperties`,
     )
     assert.equal(definition.parameters.type, 'object', `${definition.name}: parameters compile to an object root`)
+    const properties = definition.output.schema.properties
+    assert.deepEqual(properties.next.type, 'array', `${definition.name}: next must be an array`)
+    assert.equal(properties.next.required, true, `${definition.name}: next must always be present`)
+    assert.equal(properties.next.items.type, 'string', `${definition.name}: next holds plain strings`)
   }
+
+  const gradle = definitions.find((definition) => definition.name === 'mc_gradle')
+  assert.deepEqual(gradle.output.schema.properties.warnings.type, 'array', 'mc_gradle reports preflight warnings')
+  assert.equal(gradle.output.schema.properties.warnings.required, true)
 })
 
 test('mc_port_audit output schema opens the opaque nested audit shapes', async (t) => {

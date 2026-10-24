@@ -168,7 +168,7 @@ test('runGradle collects merged stdout+stderr and resolves the canonical result'
     task: 'build',
     timeoutMs: 5000,
     tailChars: 1000,
-    internals: {
+    internals: { skipPreflight: true,
       platform: 'linux',
       spawnImpl: (program, args, options) => {
         assert.equal(program, './gradlew')
@@ -201,7 +201,7 @@ test('runGradle reports a non-zero exit instead of throwing', async () => {
     task: 'build',
     timeoutMs: 5000,
     tailChars: 1000,
-    internals: {
+    internals: { skipPreflight: true,
       platform: 'linux',
       spawnImpl: () => { setImmediate(() => fake.emitClose(1, null)); return fake.child },
     },
@@ -219,7 +219,7 @@ test('runGradle kills the process tree and reports timedOut on expiry', async ()
     task: 'build',
     timeoutMs: 20,
     tailChars: 1000,
-    internals: {
+    internals: { skipPreflight: true,
       platform: 'linux',
       spawnImpl: () => fake.child, // never closes on its own
       killTreeImpl: (platform, pid) => { kills.push([platform, pid]); fake.emitClose(null, 'SIGTERM') },
@@ -240,7 +240,7 @@ test('runGradle kills the tree and reports aborted on the exec signal', async ()
     timeoutMs: 10000,
     tailChars: 1000,
     signal: controller.signal,
-    internals: {
+    internals: { skipPreflight: true,
       platform: 'win32',
       spawnImpl: (program, args, options) => {
         assert.equal(program, 'cmd.exe')
@@ -263,7 +263,7 @@ test('runGradle caps merged output to head and tail', async () => {
     task: 'build',
     timeoutMs: 5000,
     tailChars: 100,
-    internals: {
+    internals: { skipPreflight: true,
       platform: 'linux',
       spawnImpl: () => {
         setImmediate(() => {
@@ -287,7 +287,7 @@ test('runGradle rejects with a readable gradlew message when spawn throws', asyn
       task: 'build',
       timeoutMs: 5000,
       tailChars: 1000,
-      internals: {
+      internals: { skipPreflight: true,
         platform: 'linux',
         spawnImpl: () => { throw Object.assign(new Error('spawn gradlew ENOENT'), { code: 'ENOENT' }) },
       },
@@ -303,7 +303,7 @@ test('runGradle rejects when the child emits a spawn error', async () => {
     task: 'build',
     timeoutMs: 5000,
     tailChars: 1000,
-    internals: {
+    internals: { skipPreflight: true,
       platform: 'linux',
       spawnImpl: () => { setImmediate(() => fake.emitError(Object.assign(new Error('ENOENT'), { code: 'ENOENT' }))); return fake.child },
     },
@@ -321,7 +321,7 @@ test('runGradle rejects when the signal is already aborted before spawn', async 
       timeoutMs: 5000,
       tailChars: 1000,
       signal: controller.signal,
-      internals: { platform: 'linux', spawnImpl: () => { throw new Error('must not spawn') } },
+      internals: { skipPreflight: true, platform: 'linux', spawnImpl: () => { throw new Error('must not spawn') } },
     }),
     /aborted before spawn/,
   )
@@ -335,14 +335,14 @@ test('runGradle rejects injection-shaped args before spawning', async () => {
       args: ['x" & calc'],
       timeoutMs: 5000,
       tailChars: 1000,
-      internals: { platform: 'win32', spawnImpl: () => { throw new Error('must not spawn') } },
+      internals: { skipPreflight: true, platform: 'win32', spawnImpl: () => { throw new Error('must not spawn') } },
     }),
     /cmd\.exe metacharacters/,
   )
 })
 
 test('runGradle validates timeoutMs and tailChars', async () => {
-  const never = { spawnImpl: () => { throw new Error('must not spawn') } }
+  const never = { skipPreflight: true, spawnImpl: () => { throw new Error('must not spawn') } }
   await assert.rejects(
     runGradle({ projectDir: '/p', task: 'build', timeoutMs: -1, tailChars: 100, internals: never }),
     /timeoutMs/,
@@ -373,6 +373,15 @@ test('renderGradleResult follows the dsh marker contract', () => {
     renderGradleResult({ ...base, exitCode: null, signal: null, timedOut: true, timeoutMs: 500, output: { text: 'x' } }),
     'x\n[timed out after 500ms]',
   )
+})
+
+test('renderGradleResult puts preflight warnings first and next steps before the marker', () => {
+  const base = { exitCode: 1, signal: null, timedOut: false, aborted: false, timeoutMs: 1, output: { text: 'FAILURE: boom' } }
+  assert.equal(
+    renderGradleResult({ ...base, warnings: ['no JDK'], next: ['fix it'] }),
+    '[preflight] no JDK\nFAILURE: boom\n\nNext steps:\n- fix it\n[exit code: 1]',
+  )
+  assert.equal(renderGradleResult(base), 'FAILURE: boom\n[exit code: 1]', 'no warnings, no next block')
 })
 
 test('gradleCallView renders the terminal card with cwd and description', () => {

@@ -169,6 +169,10 @@ test('the codex module registers its tool and skill against a live context', asy
   assert.equal(typeof tool.execute, 'function')
   assert.equal(typeof tool.presentCall, 'function')
   assert.equal(typeof tool.presentResult, 'function')
+  const outputProperties = tool.output.schema.properties
+  assert.deepEqual(outputProperties.next.type, 'array', 'mc_codex must always report next steps')
+  assert.equal(outputProperties.next.required, true)
+  assert.equal(outputProperties.next.items.type, 'string')
 
   const candidates = await provider.list()
   assert.equal(candidates.length, 1)

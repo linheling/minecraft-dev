@@ -30,6 +30,7 @@ import {
   runCodex,
 } from './lib/codex-cli.js'
 import { codexCallView, codexResultView } from './lib/present.js'
+import { appendNextSteps, codexNextSteps } from './lib/next-steps.js'
 import { SUPPORTED_PLATFORMS } from './lib/versions.js'
 
 /** Cordis plugin name. */
@@ -213,19 +214,31 @@ export function apply(ctx, config = {}) {
               truncated: { type: 'boolean', required: true },
             },
           },
+          next: {
+            type: 'array',
+            required: true,
+            items: { type: 'string' },
+            description: 'Concrete next tool calls / files to read after this run (verify the skeleton, or the fallback chain). '
+              + 'Empty only when nothing actionable is left.',
+          },
         },
       },
       render: (_args, value) => [{
         type: 'text',
         // The app-server envelope already carries its own assembled transcript
         // (answer + observed items + thread identity); exec mode is rendered here.
-        text: value.mode === 'app-server'
-          ? value.output.text
-          : renderCodexResult(value, {
-            projectDir: value.projectDir,
-            sandbox: value.sandbox,
-            model: value.model,
-          }),
+        // The next-steps block is appended after the transcript so the model
+        // sees "what to do now" without re-reading the whole answer.
+        text: appendNextSteps(
+          value.mode === 'app-server'
+            ? value.output.text
+            : renderCodexResult(value, {
+              projectDir: value.projectDir,
+              sandbox: value.sandbox,
+              model: value.model,
+            }),
+          value.next,
+        ),
       }],
     },
     async execute(args, exec) {
@@ -271,7 +284,7 @@ export function apply(ctx, config = {}) {
         }
       }
 
-      return {
+      const value = {
         mode,
         command: result.command,
         executable: result.executable,
@@ -300,6 +313,7 @@ export function apply(ctx, config = {}) {
         },
         output: result.output,
       }
+      return { ...value, next: codexNextSteps(value) }
     },
     presentCall: codexCallView,
     presentResult: codexResultView,

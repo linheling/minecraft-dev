@@ -12,10 +12,15 @@
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import Schema from '@deepseek-ai/schemastery'
 import { renderGradleResult, runGradle } from './lib/gradle.js'
+import { appendNextSteps, auditNextSteps, gradleNextSteps, scaffoldNextSteps } from './lib/next-steps.js'
 import { auditProject } from './lib/port-audit.js'
 import { gradleCallView, gradleResultView, scaffoldCallView } from './lib/present.js'
 import { scaffoldProject } from './lib/scaffold.js'
 import { SUPPORTED_PLATFORMS } from './lib/versions.js'
+
+/** Shared description of the `next` output field: the hint block every tool returns. */
+const NEXT_OUTPUT_DESCRIPTION = 'Concrete next tool calls / files to read after this result, in order. '
+  + 'Empty when there is nothing actionable left.'
 
 const SCAFFOLD_DESCRIPTION = `Create a new Minecraft project from the bundled template. `
   + `Generates the complete Gradle project: build scripts, main class, plugin/mod metadata, `
@@ -133,20 +138,29 @@ export function apply(ctx, config = {}) {
           },
           buildCommand: { type: 'string', required: true, description: SCAFFOLD_OUTPUT_DESCRIPTION.buildCommand },
           wrapperReady: { type: 'boolean', required: true, description: SCAFFOLD_OUTPUT_DESCRIPTION.wrapperReady },
+          next: {
+            type: 'array',
+            required: true,
+            items: { type: 'string' },
+            description: NEXT_OUTPUT_DESCRIPTION,
+          },
         },
       },
       render: (_args, value) => [{
         type: 'text',
-        text: `Created ${value.platform} project ${value.projectDir} for Minecraft ${value.minecraftVersion} `
+        text: appendNextSteps(
+          `Created ${value.platform} project ${value.projectDir} for Minecraft ${value.minecraftVersion} `
           + `(${value.filesCreated.length} files, Gradle wrapper included). `
           + `Build with: ${value.buildCommand} — the first build downloads dependencies and takes several minutes.`
           + (value.platform === 'spigot' && value.minecraftVersion.startsWith('1.7')
             ? `\nNote: before building, place the vendored API jar into ${value.projectDir}\\libs\\ per libs/README.txt (no public maven hosts 1.7.10 spigot-api).`
             : ''),
+          value.next,
+        ),
       }],
     },
-    execute(args, exec) {
-      return scaffoldProject({
+    async execute(args, exec) {
+      const value = await scaffoldProject({
         platform: args.platform,
         targetDir: args.targetDir,
         name: args.name,
@@ -155,6 +169,7 @@ export function apply(ctx, config = {}) {
         javaVersion: args.javaVersion,
         signal: exec.signal,
       })
+      return { ...value, next: scaffoldNextSteps(value) }
     },
     presentCall: scaffoldCallView,
   }))
@@ -164,7 +179,10 @@ export function apply(ctx, config = {}) {
     description: 'Run a Gradle task in a Minecraft project via its wrapper (gradlew / gradlew.bat). '
       + 'Reports the exit code in the result instead of failing on non-zero exits; output is truncated '
       + 'head and tail. Use to build, test, or run client/server tasks (e.g. task="build", task="runClient"). '
-      + 'projectDir must be the scaffolded project root containing gradlew.',
+      + 'projectDir must be the scaffolded project root containing gradlew. Before spawning, the wrapper and the '
+      + 'JDK are checked against the project toolchain and any mismatch comes back as a [preflight] warning '
+      + '(so fix the environment before re-reading Gradle output); only one run per projectDir is allowed at '
+      + 'a time, and the result ends with next-step hints for this exact outcome.',
     parameters: {
       projectDir: { type: 'string', required: true, description: 'Absolute path of the Gradle project root (must contain gradlew or gradlew.bat).' },
       task: { type: 'string', required: true, description: 'Gradle task to run, e.g. build, clean, runClient, runServer, runData. No whitespace or shell metacharacters.' },
@@ -194,12 +212,25 @@ export function apply(ctx, config = {}) {
               truncated: { type: 'boolean', required: true },
             },
           },
+          warnings: {
+            type: 'array',
+            required: true,
+            items: { type: 'string' },
+            description: 'Environment findings detected before Gradle started (missing JDK, JDK/toolchain mismatch, '
+              + 'Gradle version too old for the running JDK, Gradle 9 needing Java 17+). Empty when clean.',
+          },
+          next: {
+            type: 'array',
+            required: true,
+            items: { type: 'string' },
+            description: NEXT_OUTPUT_DESCRIPTION,
+          },
         },
       },
       render: (_args, value) => [{ type: 'text', text: renderGradleResult(value) }],
     },
-    execute(args, exec) {
-      return runGradle({
+    async execute(args, exec) {
+      const result = await runGradle({
         projectDir: args.projectDir,
         task: args.task,
         args: args.args,
@@ -207,6 +238,7 @@ export function apply(ctx, config = {}) {
         signal: exec.signal,
         tailChars: config.outputTailChars,
       })
+      return { ...result, next: gradleNextSteps({ task: args.task, projectDir: args.projectDir }, result) }
     },
     presentCall: gradleCallView,
     presentResult: gradleResultView,
@@ -259,16 +291,23 @@ export function apply(ctx, config = {}) {
             items: { type: 'object', additionalProperties: true },
           },
           summary: { type: 'object', additionalProperties: true, required: true },
+          next: {
+            type: 'array',
+            required: true,
+            items: { type: 'string' },
+            description: NEXT_OUTPUT_DESCRIPTION,
+          },
         },
       },
-      render: (_args, value) => [{ type: 'text', text: renderAuditResult(value) }],
+      render: (_args, value) => [{ type: 'text', text: appendNextSteps(renderAuditResult(value), value.next) }],
     },
-    execute(args) {
-      return auditProject({
+    async execute(args) {
+      const value = await auditProject({
         projectDir: args.projectDir,
         platform: args.platform,
         minecraftVersion: args.minecraftVersion,
       })
+      return { ...value, next: auditNextSteps(value) }
     },
   }))
 }
