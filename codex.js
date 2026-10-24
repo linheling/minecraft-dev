@@ -23,6 +23,7 @@ import { BUNDLED_SKILL_RANK } from '@deepseek-ai/dsh-skill'
 import Schema from '@deepseek-ai/schemastery'
 import { runCodexAppServer } from './lib/codex-app-server.js'
 import { architectFacts, renderArchitectBrief } from './lib/architect-brief.js'
+import { CODEX_DESCRIPTION } from './lib/descriptions.js'
 import {
   CODEX_SANDBOXES,
   DEFAULT_CODEX_SANDBOX,
@@ -60,18 +61,6 @@ const SKILL_DESCRIPTION = 'Use the user\'s own Codex (Astra) as a Minecraft ARCH
 
 const ASSET_DIR = fileURLToPath(new URL('./assets/codex-architect/', import.meta.url))
 const SKILL_LOCATOR = new URL('./assets/codex-architect/SKILL.md', import.meta.url)
-
-const CODEX_DESCRIPTION = 'Use the user\'s own Codex CLI as an architect for one Minecraft project. '
-  + 'Writes <projectDir>/.dsh/codex-architect.md (the exact prompt, readable and editable), then '
-  + 'runs Codex on it through a visible command with the user\'s own Codex account and '
-  + 'configuration. Returns the command, the full merged transcript, the exit code, the files the '
-  + 'run changed, and the Codex thread id. Two modes: "app-server" (default) drives the official '
-  + '`codex app-server --stdio` protocol, which creates a REAL Codex session that shows up in the '
-  + 'Codex desktop app list and can be continued there; "exec" runs `codex exec` as a plain child '
-  + 'process, which is simpler but its sessions stay hidden from the desktop app. Both send the '
-  + 'prompt from the file, so nothing is hidden and the user can reproduce the run themselves. '
-  + 'Expect a skeleton with `// [TODO: Agent B] <description>` markers plus a FILL-SPEC.md; that is '
-  + 'the handoff contract for mc_codex uses.'
 
 /** Transport modes for mc_codex; see the module description for the tradeoff. */
 export const CODEX_MODES = ['app-server', 'exec']

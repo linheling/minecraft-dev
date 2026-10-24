@@ -11,6 +11,7 @@
 
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import Schema from '@deepseek-ai/schemastery'
+import { GRADLE_DESCRIPTION, PORT_AUDIT_DESCRIPTION, SCAFFOLD_DESCRIPTION } from './lib/descriptions.js'
 import { renderGradleResult, runGradle } from './lib/gradle.js'
 import { appendNextSteps, auditNextSteps, gradleNextSteps, scaffoldNextSteps } from './lib/next-steps.js'
 import { auditProject } from './lib/port-audit.js'
@@ -21,16 +22,6 @@ import { SUPPORTED_PLATFORMS } from './lib/versions.js'
 /** Shared description of the `next` output field: the hint block every tool returns. */
 const NEXT_OUTPUT_DESCRIPTION = 'Concrete next tool calls / files to read after this result, in order. '
   + 'Empty when there is nothing actionable left.'
-
-const SCAFFOLD_DESCRIPTION = `Create a new Minecraft project from the bundled template. `
-  + `Generates the complete Gradle project: build scripts, main class, plugin/mod metadata, `
-  + `and a Gradle wrapper so the project builds without a Gradle installation. `
-  + `Supported platforms: ${SUPPORTED_PLATFORMS.join(', ')}. `
-  + `targetDir must be a new or empty directory. javaVersion defaults to the era's level `
-  + `(8 for the 1.7.10/1.12.2/1.16.5 lines; 17 for fabric/neoforge 1.20.x; `
-  + `21 for paper 1.20.x and the 1.21.x lines; 25 for 26.x) when omitted. `
-  + `After scaffolding, run "gradlew.bat build" (Windows) or "./gradlew build" in targetDir; `
-  + `the first build downloads dependencies and takes several minutes.`
 
 const SCAFFOLD_OUTPUT_DESCRIPTION = {
   platform: 'The platform scaffolded.',
@@ -176,13 +167,7 @@ export function apply(ctx, config = {}) {
 
   ctx.tools.register(defineTool({
     name: 'mc_gradle',
-    description: 'Run a Gradle task in a Minecraft project via its wrapper (gradlew / gradlew.bat). '
-      + 'Reports the exit code in the result instead of failing on non-zero exits; output is truncated '
-      + 'head and tail. Use to build, test, or run client/server tasks (e.g. task="build", task="runClient"). '
-      + 'projectDir must be the scaffolded project root containing gradlew. Before spawning, the wrapper and the '
-      + 'JDK are checked against the project toolchain and any mismatch comes back as a [preflight] warning '
-      + '(so fix the environment before re-reading Gradle output); only one run per projectDir is allowed at '
-      + 'a time, and the result ends with next-step hints for this exact outcome.',
+    description: GRADLE_DESCRIPTION,
     parameters: {
       projectDir: { type: 'string', required: true, description: 'Absolute path of the Gradle project root (must contain gradlew or gradlew.bat).' },
       task: { type: 'string', required: true, description: 'Gradle task to run, e.g. build, clean, runClient, runServer, runData. No whitespace or shell metacharacters.' },
@@ -246,13 +231,7 @@ export function apply(ctx, config = {}) {
 
   ctx.tools.register(defineTool({
     name: 'mc_port_audit',
-    description: 'Audit an existing Minecraft project read-only against a target platform/version '
-      + 'before porting it. Checks the Gradle wrapper version, Java level/toolchain, foojay resolver, '
-      + 'mods.toml/neoforge.mods.toml version ranges, plugin.yml api-version, build plugin type, '
-      + 'dependency coordinates, and imports of removed/renamed APIs (e.g. GameRegistry, '
-      + 'SimpleNetworkWrapper, net.minecraft.block.Block). Returns findings sorted by severity '
-      + '(blocker/warning/info) with file:line and a repair hint. Writes nothing: run it first, then '
-      + 'decide between an in-place upgrade and regenerate-skeleton porting.',
+    description: PORT_AUDIT_DESCRIPTION,
     parameters: {
       projectDir: {
         type: 'string',
