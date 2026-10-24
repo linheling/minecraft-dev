@@ -114,6 +114,28 @@ test('codexArgv builds a copy-pasteable win32 command that reads the prompt on s
   assert.doesNotMatch(command, /--ephemeral/)
 })
 
+test('codexArgv refuses win32 tokens cmd.exe cannot quote instead of escaping them', () => {
+  const base = {
+    platform: 'win32',
+    executable: 'codex.exe',
+    projectDir: 'C:\\p',
+    promptFile: 'C:\\p\\prompt.md',
+  }
+  // The old `\"` rewrite ran a different command line than the one displayed;
+  // the shared rule now fails loudly on the same input.
+  assert.throws(() => codexArgv({ ...base, extraArgs: ['--msg=a"b'] }), /cannot be passed to cmd\.exe/)
+  assert.throws(() => codexArgv({ ...base, model: 'x"y' }), /cannot be passed to cmd\.exe/)
+  // POSIX has a real quoting form, so the same value stays expressible there.
+  const posix = codexArgv({
+    platform: 'linux',
+    executable: '/usr/bin/codex',
+    projectDir: '/p',
+    promptFile: '/p/prompt.md',
+    extraArgs: ['--msg=a"b'],
+  })
+  assert.match(posix.command, /--msg=a"b/)
+})
+
 test('codexArgv builds a posix command through sh and omits optional flags', () => {
   const { argv, command } = codexArgv({
     platform: 'linux',

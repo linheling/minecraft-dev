@@ -160,6 +160,15 @@ test('appServerArgv wraps a Windows .cmd shim through cmd.exe', () => {
   assert.deepEqual(appServerArgv('C:\\tools\\codex.exe', { platform: 'win32' }), ['C:\\tools\\codex.exe', 'app-server', '--stdio'])
 })
 
+test('appServerArgv refuses a .cmd path cmd.exe cannot quote', () => {
+  // A real Windows path cannot contain `"`, but the rule has to be the shared
+  // one: reject, never rewrite to the `\"` form cmd.exe does not parse.
+  assert.throws(
+    () => appServerArgv('C:\\tools\\a"b.cmd', { platform: 'win32' }),
+    /cannot be passed to cmd\.exe/,
+  )
+})
+
 // ---------------------------------------------------------------------------
 // happy path
 // ---------------------------------------------------------------------------
