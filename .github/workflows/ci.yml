@@ -87,7 +87,7 @@ jobs:
       # a schema the compiler rejects: v0.16.0 shipped mc_port_audit with object
       # nodes missing `additionalProperties`, and the whole minecraft-tools row
       # failed to activate in the harness while every job here stayed green.
-      - run: REQUIRE_PLUGIN_DEPS=1 node --test test/modules.test.js test/tools-schema.test.js test/tool-components.test.js test/smoke.test.js test/state-doc.test.js
+      - run: REQUIRE_PLUGIN_DEPS=1 node --test test/modules.test.js test/tools-schema.test.js test/tool-components.test.js test/smoke.test.js test/state-doc.test.js test/codex-architect.test.js
       # The checkout-based import above cannot catch a package that forgets a
       # directory in package.json.files. Pack the real tarball, unpack it, assert
       # the bundled assets/preset files are present, then import all four entry

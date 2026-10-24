@@ -68,13 +68,18 @@ test('tools.js output schemas survive the harness value-schema compile', async (
     assert.equal(definition.parameters.type, 'object', `${definition.name}: parameters compile to an object root`)
     const properties = definition.output.schema.properties
     assert.deepEqual(properties.next.type, 'array', `${definition.name}: next must be an array`)
-    assert.equal(properties.next.required, true, `${definition.name}: next must always be present`)
+    // defineTool compiles the per-property `required: true` marker into the
+    // schema-level required array and drops it from the property node itself.
+    assert.ok(
+      definition.output.schema.required.includes('next'),
+      `${definition.name}: next must always be present`,
+    )
     assert.equal(properties.next.items.type, 'string', `${definition.name}: next holds plain strings`)
   }
 
   const gradle = definitions.find((definition) => definition.name === 'mc_gradle')
   assert.deepEqual(gradle.output.schema.properties.warnings.type, 'array', 'mc_gradle reports preflight warnings')
-  assert.equal(gradle.output.schema.properties.warnings.required, true)
+  assert.ok(gradle.output.schema.required.includes('warnings'), 'mc_gradle always reports preflight warnings')
 })
 
 test('mc_port_audit output schema opens the opaque nested audit shapes', async (t) => {

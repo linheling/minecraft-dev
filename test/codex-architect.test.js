@@ -171,7 +171,8 @@ test('the codex module registers its tool and skill against a live context', asy
   assert.equal(typeof tool.presentResult, 'function')
   const outputProperties = tool.output.schema.properties
   assert.deepEqual(outputProperties.next.type, 'array', 'mc_codex must always report next steps')
-  assert.equal(outputProperties.next.required, true)
+  // defineTool hoists the per-property `required: true` marker into the schema-level array.
+  assert.ok(tool.output.schema.required.includes('next'), 'mc_codex must always report next steps')
   assert.equal(outputProperties.next.items.type, 'string')
 
   const candidates = await provider.list()
