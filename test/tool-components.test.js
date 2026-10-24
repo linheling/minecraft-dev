@@ -80,7 +80,7 @@ test('each single-tool component registers exactly its own tool', async (t) => {
     mod.apply({ tools: { register: (definition) => definitions.push(definition) } }, {})
     assert.deepEqual(definitions.map((definition) => definition.name), [tool], `${file} registered the wrong tools`)
     assert.equal(definitions[0].output.schema.additionalProperties, false, `${tool}: closed output schema`)
-    registered.add(tool.name)
+    registered.add(tool)
   }
   // Three components, three distinct tools: no name may repeat across rows.
   assert.equal(registered.size, COMPONENTS.length, 'single-tool components must not overlap')

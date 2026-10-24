@@ -17,7 +17,7 @@ Minecraft development plugin for [DeepSeek Harness](https://github.com/deepseek-
 - `mc_codex` — architect-preset-only bridge to the user's own Codex CLI, with a fully visible session.
 - `minecraft-porting` skill — regenerate-skeleton porting workflow, version-family breakpoints, API renames and a Forge → NeoForge guide.
 
-Tests: `npm test` (353 cases; Node 22.19+ / 24), syntax gate: `npm run check:syntax`, version-line state gate: `npm run check:state`, link check: `npm run check-links`.
+Tests: `npm test` (360 cases; Node 22.19+ / 24), syntax gate: `npm run check:syntax`, version-line state gate: `npm run check:state`, link check: `npm run check-links`.
 
 > ⚠️ **dsh 0.2.1 把子代理的 `persona` / `toolFilter` 删了**（`@deepseek-ai/dsh-tool-subagent`）：这两个键现在会**直接抛错** —— *"no longer supported; configure persona and tool plugins in an Agent Preset and select it with agentPreset (spawn only)"*；`backgroundMode` / `enableRunInBackground` 也一并消失（写了不报错，但完全不生效）。因此自 **v0.10.0** 起，A–D 四个角色的"人设 + 工具范围"改为 4 个 Agent Preset（`mc-plan` / `mc-skeleton` / `mc-content` / `mc-verify`，见 `preset/roles.js`），宿主层的 4 行只剩 `provider` / `toolName` / `agentPreset` / `maxDepth`。同时 0.2.1 的委派**一律异步**：调用立即返回 id、完成时通知，角色人设里已写明结果要放在最后一条消息里。
 >
@@ -311,7 +311,7 @@ npm run smoke:build      # 生成一个真实工程用于构建冒烟（之后�
 
 ## 与 MinecraftDeveloperGuide 的关系
 
-[MinecraftDeveloperGuide](https://github.com/mouse0w0/MinecraftDeveloperGuide) 是 1.12.2 时代的**链接索引**（单 README，582 行，26.x 零条目）；本仓库是**可执行的现代线工具链**（1.7.10–26.3、19 个可生成组合、353 个测试 + 4 条 CI）。两者互补：
+[MinecraftDeveloperGuide](https://github.com/mouse0w0/MinecraftDeveloperGuide) 是 1.12.2 时代的**链接索引**（单 README，582 行，26.x 零条目）；本仓库是**可执行的现代线工具链**（1.7.10–26.3、19 个可生成组合、360 个测试 + 4 条 CI）。两者互补：
 
 - 查「当年怎么写」的历史资料清单 → 看它；
 - 要「现在能直接生成并构建」→ 用本仓库的 `mc_scaffold` / `mc_gradle` / `mc_port_audit`。

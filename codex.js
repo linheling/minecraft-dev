@@ -31,7 +31,7 @@ import {
   runCodex,
 } from './lib/codex-cli.js'
 import { codexCallView, codexResultView } from './lib/present.js'
-import { appendNextSteps, codexNextSteps } from './lib/next-steps.js'
+import { appendNextSteps, codexNextSteps, NEXT_OUTPUT_DESCRIPTION } from './lib/next-steps.js'
 import { SUPPORTED_PLATFORMS } from './lib/versions.js'
 
 /** Cordis plugin name. */
@@ -207,8 +207,7 @@ export function apply(ctx, config = {}) {
             type: 'array',
             required: true,
             items: { type: 'string' },
-            description: 'Concrete next tool calls / files to read after this run (verify the skeleton, or the fallback chain). '
-              + 'Empty only when nothing actionable is left.',
+            description: NEXT_OUTPUT_DESCRIPTION,
           },
         },
       },

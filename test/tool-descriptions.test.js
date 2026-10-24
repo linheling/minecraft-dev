@@ -1,5 +1,5 @@
 /**
- * lib/descriptions.js — the four model-facing tool descriptions. They are
+ * lib/descriptions.js — the five model-facing tool descriptions. They are
  * instruction sheets, so the tests enforce the same shape on all of them:
  * `Use when:` / `Do not use for:` / `Constraints:` / `After a failure:`, plus
  * concrete cross-references. A description that does not say when NOT to use
@@ -13,6 +13,7 @@ import {
   GRADLE_DESCRIPTION,
   PORT_AUDIT_DESCRIPTION,
   SCAFFOLD_DESCRIPTION,
+  SMOKE_DESCRIPTION,
 } from '../lib/descriptions.js'
 import { SUPPORTED_PLATFORMS } from '../lib/versions.js'
 
@@ -20,6 +21,7 @@ const DESCRIPTIONS = {
   mc_scaffold: SCAFFOLD_DESCRIPTION,
   mc_gradle: GRADLE_DESCRIPTION,
   mc_port_audit: PORT_AUDIT_DESCRIPTION,
+  mc_smoke: SMOKE_DESCRIPTION,
   mc_codex: CODEX_DESCRIPTION,
 }
 const KNOWN_TOOLS = new Set([
@@ -101,6 +103,12 @@ describe('per-tool contract details', () => {
   test('mc_port_audit says read-only and forbids the build substitution', () => {
     assert.ok(PORT_AUDIT_DESCRIPTION.includes('read-only'))
     assert.ok(/never builds/.test(PORT_AUDIT_DESCRIPTION))
+  })
+
+  test('mc_smoke names the evidence directory and the opt-in cost', () => {
+    assert.ok(SMOKE_DESCRIPTION.includes('.dsh/smoke/'))
+    assert.ok(/real JVM/.test(SMOKE_DESCRIPTION))
+    assert.ok(/run holds the project build slot/.test(SMOKE_DESCRIPTION))
   })
 
   test('mc_codex names both modes and the handoff markers', () => {

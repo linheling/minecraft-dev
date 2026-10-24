@@ -168,7 +168,8 @@ test('runGradle collects merged stdout+stderr and resolves the canonical result'
     task: 'build',
     timeoutMs: 5000,
     tailChars: 1000,
-    internals: { skipPreflight: true,
+    internals: {
+      skipPreflight: true,
       platform: 'linux',
       spawnImpl: (program, args, options) => {
         assert.equal(program, './gradlew')
@@ -201,7 +202,8 @@ test('runGradle reports a non-zero exit instead of throwing', async () => {
     task: 'build',
     timeoutMs: 5000,
     tailChars: 1000,
-    internals: { skipPreflight: true,
+    internals: {
+      skipPreflight: true,
       platform: 'linux',
       spawnImpl: () => { setImmediate(() => fake.emitClose(1, null)); return fake.child },
     },
@@ -219,7 +221,8 @@ test('runGradle kills the process tree and reports timedOut on expiry', async ()
     task: 'build',
     timeoutMs: 20,
     tailChars: 1000,
-    internals: { skipPreflight: true,
+    internals: {
+      skipPreflight: true,
       platform: 'linux',
       spawnImpl: () => fake.child, // never closes on its own
       killTreeImpl: (platform, pid) => { kills.push([platform, pid]); fake.emitClose(null, 'SIGTERM') },
@@ -240,7 +243,8 @@ test('runGradle kills the tree and reports aborted on the exec signal', async ()
     timeoutMs: 10000,
     tailChars: 1000,
     signal: controller.signal,
-    internals: { skipPreflight: true,
+    internals: {
+      skipPreflight: true,
       platform: 'win32',
       spawnImpl: (program, args, options) => {
         assert.equal(program, 'cmd.exe')
@@ -263,7 +267,8 @@ test('runGradle caps merged output to head and tail', async () => {
     task: 'build',
     timeoutMs: 5000,
     tailChars: 100,
-    internals: { skipPreflight: true,
+    internals: {
+      skipPreflight: true,
       platform: 'linux',
       spawnImpl: () => {
         setImmediate(() => {
@@ -287,7 +292,8 @@ test('runGradle rejects with a readable gradlew message when spawn throws', asyn
       task: 'build',
       timeoutMs: 5000,
       tailChars: 1000,
-      internals: { skipPreflight: true,
+      internals: {
+      skipPreflight: true,
         platform: 'linux',
         spawnImpl: () => { throw Object.assign(new Error('spawn gradlew ENOENT'), { code: 'ENOENT' }) },
       },
@@ -303,7 +309,8 @@ test('runGradle rejects when the child emits a spawn error', async () => {
     task: 'build',
     timeoutMs: 5000,
     tailChars: 1000,
-    internals: { skipPreflight: true,
+    internals: {
+      skipPreflight: true,
       platform: 'linux',
       spawnImpl: () => { setImmediate(() => fake.emitError(Object.assign(new Error('ENOENT'), { code: 'ENOENT' }))); return fake.child },
     },

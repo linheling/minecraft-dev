@@ -32,7 +32,7 @@
 | neoforge | 1.21.1 | 1.21.1 | 21 | neoforge-1.21.1 | 2026-09 | 真机客户端安装构建通过（NeoForge 21.1.249；1.21.1 需显式 modLoader/loaderVersion） |
 | neoforge | 26 | 26.2 | 25 | neoforge-26 | 未验证 | 模板生成与 NeoForge 26.2.0.59 坐标；无构建记录 |
 | neoforge | 26.3 | 26.3 | 25 | neoforge-26 | 未验证 | 坐标查证：26.3.0.12-beta 是 maven.neoforged.net 上最新的 26.3 构建（2026-09），该线 beta-only |
-| spigot | 1.7 | 1.7.10 | 8 | spigot-1.7.10 | 2026-08-16 | 坐标查证（非构建）：spigot-api 1.7.10 无公开 maven（hub 最早 1.8，镜像 404），模板改为 vendored jar |
+| spigot | 1.7 | 1.7.10 | 8 | spigot-1.7.10 | 未验证 | 坐标查证（非构建）：spigot-api 1.7.10 无公开 maven（hub 最早 1.8，镜像 404），模板改为 vendored jar |
 | spigot | 1.12 | 1.12.2 | 8 | spigot-1.12.2 | 未验证 | 坐标查证：spigot-api 1.12.2-R0.1-SNAPSHOT 可从 Spigot hub 解析；该线未构建 |
 
 ## 维护方式
