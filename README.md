@@ -125,7 +125,7 @@ Tests: `npm test` (360 cases; Node 22.19+ / 24), syntax gate: `npm run check:syn
 
 ### 方式一：npm 安装（先确认 registry 版本）
 
-> **npm latest 可能落后于仓库**：截至 2026-10-25，registry `latest` 为 `0.10.1`，仓库已到 `0.17.0`；需要 `mc_port_audit`、`minecraft-porting`、代理端/数据包技能或 26.3 支持时，请用方式二/三，或先 `npm view minecraft-dev version` 确认新版已发布。
+> **npm latest 可能落后于仓库**：截至 2026-10-25，registry `latest` 为 `0.10.1`，仓库已到 `0.18.0`；需要 `mc_port_audit`、`minecraft-porting`、代理端/数据包技能或 26.3 支持时，请用方式二/三，或先 `npm view minecraft-dev version` 确认新版已发布。
 
 ```sh
 dsh plugin --profile web add minecraft-dev
@@ -293,12 +293,12 @@ npm run check-api-index      # 只校验已提交索引的 provenance 是否完�
 
 每个平台技能下有一份 `references/api-index/<MC 版本>.md`，由 `scripts/fetch-mc-api-index.mjs` 用 `javap -public`（或源码正则）从**钉选版本的工件**提取，用于离线 `grep` 精确签名 —— 因为 web 兜底在不少网络下不可靠，而"凭记忆写签名"是本项目的铁律禁区。
 
-线的清单**不单独维护**：脚本直接读 `lib/versions.js` 的 `PLATFORM_LINES`（与 `mc_scaffold` 同一张表），所以索引不会与插件钉选的版本漂移。当前矩阵 19 条线，已生成 **18 条**：
+线的清单**不单独维护**：脚本直接读 `lib/versions.js` 的 `PLATFORM_LINES`（与 `mc_scaffold` 同一张表），所以索引不会与插件钉选的版本漂移。当前矩阵 19 条线，已生成 **17 条**（NeoForge 1.20.1 走 legacyforge 坐标、Spigot 1.7.10 只有 vendored jar，两条都无公开可抓工件）：
 
 | 平台 | 索引线 | 来源工件 | 深度 |
 |---|---|---|---|
 | Paper | `1.20.6` `1.21.8` `26.2` `26.3` | `paper-api`（26.x 二进制 / 旧线时间戳快照 jar） | 26.3 深层 300 KB，其余 100 KB |
-| NeoForge | `1.20.1` `1.21.1` `1.21.11` `26.2` `26.3` | `neoforge`（本地 `-sources.jar` 优先，其次二进制） | 26.3 深层 300 KB |
+| NeoForge | `1.21.1` `1.21.11` `26.2` `26.3` | `neoforge`（本地 `-sources.jar` 优先，其次二进制） | 26.3 深层 300 KB |
 | Forge | `1.7.10` `1.12.2` `1.16.5` `1.20.1` | `forge-<mc>-<ver>-universal.jar` | 1.20.1 深层 |
 | Fabric | `1.20.1` `1.21.11` `26.2` `26.3` | `fabric-api` 的模块 jar（聚合 POM 解析出模块版本） | 26.3 深层 |
 | Spigot | `1.12.2` | `spigot-api`（时间戳快照） | 深层 300 KB |
@@ -310,7 +310,7 @@ npm run check-api-index      # 只校验已提交索引的 provenance 是否完�
 
 - **它是检索辅助，不是权威。** 每份文件头有 `PROVENANCE`（坐标、sha1、日期、JDK、`mapping`、`classes=kept/total`），`TRUNCATED` 表示已按预算裁剪（技能里提到的类优先、其余按包轮转，避免整包消失）。
 - **`mapping=srg|intermediary`** 表示工件里 MC 类型是混淆名（`func_/class_`），签名里的类型名**不可直接照抄**，需要 deobf/api 工件。
-- 体积预算：单文件 ≤ 300 KB、全部索引 ≤ 3 MB（`test/api-index.test.js` 强制）；当前 18 份 ≈ 2.6 MB，`npm pack` ≈ 640 KB。
+- 体积预算：单文件 ≤ 300 KB、全部索引 ≤ 3 MB（`test/api-index.test.js` 强制）；当前 17 份 ≈ 1.9 MB；`npm pack` ≈ 794 KB / 3.8 MB。
 - 生成器**不进入 `npm test`**：网络不稳，索引是可提交的产物，`check-api-index` 只做本地校验。
 - 索引只含**公开成员签名**（类名 + 成员声明），不含源码正文与方法体；各平台的 `NOTICE.md` 记录了坐标、许可证与官方文档链接。
 - 未覆盖/存疑时，退回 `references/api/*.md` 与官方文档 —— 技能里的铁律不变。

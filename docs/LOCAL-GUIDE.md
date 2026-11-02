@@ -1,6 +1,6 @@
 # minecraft-dev 本地导读（改代码前先读这一页）
 
-> 适用版本：**0.17.0**（`package.json:3`），默认分支 `master`。
+> 适用版本：**0.18.0**（`package.json:3`），默认分支 `master`。
 > 本文件是「本地副本」的导航，不随 npm 包发布范围约束（`package.json:14-25` 的 `files` 白名单包含 `docs/`，本文件在包内，但只是文档）。
 > 事实基线：2026-11-03，本地 `npm test` 360 例全过。
 
@@ -21,10 +21,10 @@
 | 工作目录 | `D:\C\MC\minecraft-dev` |
 | git 基线 | `a658559` baseline（上游 master 快照，260 个 tracked 文件） |
 | 上游 | `linheling/minecraft-dev`，是 `sikadi233-hub/minecraft-dev` 的 **fork** |
-| 版本关系 | 本地 fork = **0.17.0**；upstream master = **0.11.0**（两条独立功能线，勿盲目 merge） |
+| 版本关系 | 本地 fork = **0.18.0**（0.17.0 + 从 upstream cherry-pick 的 api-index 线）；upstream master = **0.11.0**（其余功能线仍分叉，勿整体 merge） |
 | Node | v24.22.1 / npm 11.19.1（`node ^22.19 \|\| >=24`） |
 | dsh | **0.2.1-rc.5**（不在 PATH；CLI 见下） |
-| 已装 profile | `desktop` 里 `minecraft-dev@0.17.0` 已安装，内容与本地快照一致（仅少了 .github / test / scripts 等 dev 文件） |
+| 已装 profile | `desktop` 里装的是 `minecraft-dev@0.17.0`；本地已到 0.18.0，重装后才生效（见 §6） |
 | 依赖 | 已 `npm install`，`node_modules` 在 `.gitignore` 里 |
 
 `dsh` CLI 的实际路径（App 自带，非全局）：
@@ -119,7 +119,7 @@ node --test test/modules.test.js
 - `assets/skills/<name>/references/` — 技能引用资料
 - `assets/codex-architect/SKILL.md` — 仅架构师预设可见
 - `templates/<platform>/<line>/` — 14 个平台×线模板目录 + `templates/common/`，共 96 个模板文件
-- `assets/skills/<name>/references/api-index/<MC 版本>.md` — 平台 API 离线签名索引（18 条线，`javap -public` 从钉选工件生成，每份带 `PROVENANCE` 头与可能出现的 `TRUNCATED` 标记）
+- `assets/skills/<name>/references/api-index/<MC 版本>.md` — 平台 API 离线签名索引（17 份；legacyforge 1.20.1 无公开工件；`javap -public` 从钉选工件生成，每份带 `PROVENANCE` 头与可能出现的 `TRUNCATED` 标记）
 
 ### 3.5 测试 / 脚本 / 文档
 
@@ -241,7 +241,8 @@ preset.js apply
 2. 全量：`npm run fetch-api-index`（在 PowerShell / cmd 下跑；Git Bash 的 GNU `tar` 会把 `C:\...` 当远程主机）
 3. 单线加深：`node scripts/fetch-mc-api-index.mjs --platform paper --line 1.20.6`
 4. 离线校验：`npm run check-api-index`
-5. 跑 `test/api-index.test.js`：PROVENANCE 字段完整、标题与 `TRUNCATED` 双向一致、单文件 ≤320 KB、语料 ≤3 MB、每个带索引的技能都必须提到 `references/api-index/`
+5. 看各平台 `COVERAGE.md`：`unavailable` 行表示这次没抓到工件；后面标「保留上次生成的索引：<坐标>」的行说明文件仍是上一次生成的版本，没有跟着这次重跑更新（生成器不会删旧文件）
+6. 跑 `test/api-index.test.js`：PROVENANCE 字段完整、标题与 `TRUNCATED` 双向一致、单文件 ≤320 KB、语料 ≤3 MB、每个带索引的技能都必须提到 `references/api-index/`
 
 ## 6. 改完怎么让它生效
 
@@ -253,7 +254,7 @@ dsh plugin --profile desktop add minecraft-dev
 
 :: B. 本地 tarball
 npm pack
-dsh plugin --profile desktop add .\minecraft-dev-0.17.0.tgz
+dsh plugin --profile desktop add .\minecraft-dev-0.18.0.tgz
 
 :: C. 源码直连（开发用，最推荐）
 dsh plugin --profile desktop add D:\C\MC\minecraft-dev
@@ -266,7 +267,7 @@ dsh plugin --profile desktop add D:\C\MC\minecraft-dev
 ```
 C:\Users\lenovo\.dsh\profiles\desktop\
   package.json          "minecraft-dev": "git+https://github.com/linheling/minecraft-dev.git"
-  node_modules\minecraft-dev\    ← 实际加载的代码（当前 = 本地 0.17.0 快照）
+  node_modules\minecraft-dev\    ← 实际加载的代码（当前 = 本地 0.18.0 快照）
 ```
 
 源码直连安装后，`node_modules/minecraft-dev` 会变成指向本地目录的链接（npm `file:` 语义）。改完源码**重启 dsh** 即可，不需要重新装；但如果你改的是 `preset/**` 且已存在 `.agent-presets` 副本，仍要删副本。
@@ -287,7 +288,7 @@ C:\Users\lenovo\.dsh\.agent-presets\
 
 1. **dsh 0.2.1 删了 `persona` / `toolFilter`**：bundle 行里写了直接抛错；角色信息必须移进 Agent Preset。`backgroundMode` 已失效。
 2. **peer 声明是硬门禁**（0.2.0 起）：不匹配 = 整包拒绝导入。node-semver 无法用一条范围覆盖多条预发布线，只能逐条枚举（现在写了 3 条 `||`）。兜底：
-   `dsh plugin --profile desktop allow-version minecraft-dev@0.17.0 --dsh-version 0.2.1-rc.5 --accept-risk`
+   `dsh plugin --profile desktop allow-version minecraft-dev@0.18.0 --dsh-version 0.2.1-rc.5 --accept-risk`
 3. **preset 双形态必须同时维护**：`agent.cordis.yml`（0.1.5/0.1.6 目录）和 `rows.js`（0.1.7+ 注册）。parity 测试只查「JS→YAML 有对应」，**抓不到 YAML 独有标量、也抓不到键序**——YAML 里多写一个键不会报错。
 4. **`preset.yml` 是严格 YAML**：`name` / `description` 含 `[`、`]`、`: ` 必须加引号，否则元数据整块丢失且不报错。
 5. **`backgroundMode` 失效 + `taskkill` 不彻底**：win32 杀进程树用 `taskkill /PID <pid> /T /F`，失败才回退 SIGKILL（只杀根进程，可能留下 Gradle daemon）。
@@ -300,7 +301,7 @@ C:\Users\lenovo\.dsh\.agent-presets\
 12. **用户技能覆盖 bundled 技能**：`~/.dsh/skills` 下同名 rank < 600 会抢占。调试技能时先确认没被覆盖。
 13. **26.3 生态不完整**：Paper 已有 `-stable`，NeoForge 只有 `-beta`（`26.3.0.12-beta`）；`docs/STATE.md` 里 17 条线「未验证」。
 14. **fabric loom 锁在 1.17 线**：loom 1.18.2 要求 Gradle JVM 为 Java 25，跨线升级会破。别「顺手升级」。
-15. **fork ≠ 上游**：本地 0.17.0 与 upstream 0.11.0 是两条线（本地加了 smoke / 单工具组件 / STATE / next-steps / preflight；上游走「平台 API 离线签名索引」）。merge 前先看两边 README 功能表。
+15. **fork ≠ 上游**：本地 0.18.0 与 upstream 0.11.0 仍是两条线（本地多了 smoke / 单工具组件 / STATE / next-steps / preflight；上游的 api-index 线已在 0.18.0 里 cherry-pick 进来）。merge 前先看两边 README 功能表。
 16. **索引是生成物，不要手改**：`references/api-index/*.md` 由脚本产出，手改会被 `check-api-index` / `test/api-index.test.js` 抓出来；要改内容请改生成器并重跑。
 17. **生成器要在 PowerShell/cmd 跑**：Git Bash 里的 GNU `tar` 会把 `C:\Users\...` 当成远程主机（报 `Cannot connect to C: resolve failed`）；`--check` 模式不联网、不受影响。
 
