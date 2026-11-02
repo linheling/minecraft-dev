@@ -6,4 +6,4 @@
 | 线 | 状态 | 工件 / 备注 |
 |---|---|---|
 | 1.7.10 | unavailable: snapshot-unresolved |  |
-| 1.12.2 | ok (truncated 511/709) 299 KB | spigot:1.12.2-R0.1-SNAPSHOT |
+| 1.12.2 | ok (truncated 501/709) 300 KB | spigot:1.12.2-R0.1-SNAPSHOT |

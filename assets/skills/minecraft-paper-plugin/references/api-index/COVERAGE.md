@@ -5,7 +5,7 @@
 
 | 线 | 状态 | 工件 / 备注 |
 |---|---|---|
-| 1.20.6 | ok (truncated 89/1282) 99 KB | paper:1.20.6-R0.1-SNAPSHOT |
-| 1.21.8 | ok (truncated 90/1561) 99 KB | paper:1.21.8-R0.1-SNAPSHOT |
-| 26.2 | ok (truncated 89/1626) 100 KB | paper:26.2.build.130-stable |
-| 26.3 | ok (truncated 389/1639) 300 KB | paper:26.3.build.35-alpha |
+| 1.20.6 | ok (truncated 96/1282) 98 KB | paper:1.20.6-R0.1-SNAPSHOT |
+| 1.21.8 | ok (truncated 97/1561) 99 KB | paper:1.21.8-R0.1-SNAPSHOT |
+| 26.2 | ok (truncated 97/1626) 99 KB | paper:26.2.build.135-stable |
+| 26.3 | ok (truncated 369/1645) 300 KB | paper:26.3.build.207-stable |

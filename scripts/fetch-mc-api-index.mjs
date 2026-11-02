@@ -217,8 +217,14 @@ async function resolveLineArtifact(platformName, entry) {
   }
 
   if (platformName === 'neoforge') {
-    const version = coords.neoVersion
-    const groupPath = 'net.neoforged/neoforge'
+    // The 1.20.1 line is NeoForge's "legacyforge": it ships as
+    // `net.neoforged:forge:<mc>-<forgeVersion>`, not `net.neoforged:neoforge:<neoVersion>`.
+    // Reading `coords.neoVersion` there yielded `undefined` and silently matched an
+    // unrelated artefact from the Gradle cache, which is how a 26.3 index ended up
+    // labelled 1.20.1 upstream.
+    const legacy = coords.neoVersion === undefined
+    const version = legacy ? `${mc}-${coords.forgeVersion}` : coords.neoVersion
+    const groupPath = legacy ? 'net.neoforged/forge' : 'net.neoforged/neoforge'
     const exact = fromGradleCache(groupPath, version, 'sources') ?? fromGradleCache(groupPath, version, 'binary')
     if (exact) {
       return {
@@ -228,12 +234,14 @@ async function resolveLineArtifact(platformName, entry) {
         origin: `gradle-cache ${exact.path}`,
       }
     }
+    const artifactName = legacy ? 'forge' : 'neoforge'
+    const repoPath = `https://maven.neoforged.net/releases/net/neoforged/${artifactName}`
     for (const [suffix, kind] of [['-sources.jar', 'sources'], ['.jar', 'binary']]) {
-      const url = `https://maven.neoforged.net/releases/net/neoforged/neoforge/${version}/neoforge-${version}${suffix}`
-      const path = await cachedDownload('neoforge', `neoforge-${version}${suffix}`, url, 60_000)
+      const url = `${repoPath}/${version}/${artifactName}-${version}${suffix}`
+      const path = await cachedDownload(artifactName, `${artifactName}-${version}${suffix}`, url, 60_000)
       if (path) return { path, kind, version, origin: `download ${url}` }
     }
-    return { error: 'host-unreachable' }
+    return { error: legacy ? 'legacyforge-unreachable' : 'host-unreachable' }
   }
 
   if (platformName === 'forge') {
@@ -356,7 +364,7 @@ function writeCoverage(platformName, platform, coverage) {
     `# ${platformName} 索引覆盖表`,
     '',
     `> 由 \`node scripts/fetch-mc-api-index.mjs --platform ${platformName} --all\` 生成，${today()}。`,
-    '> 线来自 `lib/versions.js` 的钉选矩阵；`unavailable` 表示该线的工件拿不到（上游不可达或无公开工件），技能里的 web 兜底仍然有效。',
+    '> 线来自 `lib/versions.js` 的钉选矩阵；`unavailable` 表示该线的工件这次拿不到（上游不可达或无公开工件），技能里的 web 兜底仍然有效。若后面标了「保留上次生成的索引」，说明该文件仍是之前生成的版本，没有跟着这次重跑更新。',
     '',
     '| 线 | 状态 | 工件 / 备注 |',
     '|---|---|---|',
@@ -376,13 +384,20 @@ async function runPlatform(platformName, options = {}) {
     const depth = options.forceDeep || options.deepLines?.has(`${platformName}:${label}`) ? 'deep' : 'wide'
     const cap = DEPTH_CAP[depth]
     const resolved = await resolveLineArtifact(platformName, entry)
+    // A line that cannot be regenerated here keeps whatever index was committed
+    // before; say so in the table instead of implying the file is gone.
+    const prevFile = join(REPO, 'assets', 'skills', platform.skill, 'references', 'api-index', `${label}.md`)
+    const prevArtifact = existsSync(prevFile)
+      ? /^\s*artifact=(.+)$/m.exec(readFileSync(prevFile, 'utf8'))?.[1].trim()
+      : undefined
+    const kept = prevArtifact ? `（保留上次生成的索引：${prevArtifact}）` : ''
     if (resolved.error) {
-      coverage.push({ line: label, status: `unavailable: ${resolved.error}`, bytes: 0 })
+      coverage.push({ line: label, status: `unavailable: ${resolved.error}${kept}`, bytes: 0 })
       continue
     }
     const extractResult = extract(platform, resolved, defaultJavaVersion(platformName, label))
     if (!extractResult) {
-      coverage.push({ line: label, status: 'unavailable: no-classes-in-whitelist', bytes: 0 })
+      coverage.push({ line: label, status: `unavailable: no-classes-in-whitelist${kept}`, bytes: 0 })
       continue
     }
     const artifact = `${platformName === 'fabric' ? 'fabric-api' : platformName}:${resolved.version}`

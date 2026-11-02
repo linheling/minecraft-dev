@@ -5,8 +5,8 @@
 
 | 线 | 状态 | 工件 / 备注 |
 |---|---|---|
-| 1.20.1 | ok (truncated 214/777) 97 KB | neoforge:undefined |
-| 1.21.11 | ok (truncated 219/794) 100 KB | neoforge:21.11.45 |
-| 1.21.1 | ok (truncated 200/689) 100 KB | neoforge:21.1.249 |
-| 26.2 | ok (truncated 213/809) 99 KB | neoforge:26.2.0.59 |
-| 26.3 | ok (truncated 553/777) 299 KB | neoforge:26.3.0.12-beta |
+| 1.20.1 | unavailable: legacyforge-unreachable |  |
+| 1.21.11 | unavailable: host-unreachable（保留上次生成的索引：neoforge:21.11.45） |  |
+| 1.21.1 | ok (truncated 199/689) 99 KB | neoforge:21.1.249 |
+| 26.2 | unavailable: host-unreachable（保留上次生成的索引：neoforge:26.2.0.59） |  |
+| 26.3 | unavailable: host-unreachable（保留上次生成的索引：neoforge:26.3.0.12-beta） |  |
