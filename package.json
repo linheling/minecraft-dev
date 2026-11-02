@@ -71,7 +71,10 @@
     "check:unverified:gate": "node scripts/report-unverified.mjs --max 60",
     "smoke:build": "node scripts/smoke-build.mjs",
     "prepublishOnly": "node --test \"test/*.test.js\"",
-    "check:state": "node scripts/check-state.mjs"
+    "check:state": "node scripts/check-state.mjs",
+    "fetch-api-index": "node scripts/fetch-mc-api-index.mjs --all",
+    "fetch-mod-api-index": "node scripts/fetch-mod-api-index.mjs --from-references",
+    "check-api-index": "node scripts/fetch-mc-api-index.mjs --check"
   },
   "license": "MIT"
 }

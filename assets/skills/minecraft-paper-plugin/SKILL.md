@@ -4,6 +4,8 @@
 > **铁律：API 签名一律 `read_file` 查 `references/api/`，禁止凭记忆写签名。** 参考里没有的，用 web 工具查官方文档（docs.papermc.io 或 javadoc.io），不要编。
 > 核对日期：2026-10-21（Paper 26.3 已有 `-stable` 构建，实测最新 `26.3.build.209-stable`；26.2 最新 `26.2.build.134-stable`；1.21 线上游已到 `1.21.11-R0.1-SNAPSHOT`，本仓库钉选 `1.21.8`；Java 25）。
 
+> **签名索引（离线，可选）**：若 `references/api-index/` 下有对应版本的 `.md`，先 `grep` 它定位精确签名（头部 `TRUNCATED` 表示已裁剪、`mapping=srg|intermediary` 表示 MC 类型是混淆名、不可照抄）；没有索引或索引未覆盖时，退回 `references/api/` 与官方文档。覆盖情况见 `references/api-index/COVERAGE.md`。
+
 ## 1. 定位与家族
 
 - Paper 是 Spigot/Bukkit 的延续，API 兼容 Bukkit 插件：为 Paper 写的插件一般也能跑在 Spigot 上（除非用了 Paper 专属 API）。
