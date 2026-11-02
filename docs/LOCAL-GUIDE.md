@@ -119,6 +119,7 @@ node --test test/modules.test.js
 - `assets/skills/<name>/references/` — 技能引用资料
 - `assets/codex-architect/SKILL.md` — 仅架构师预设可见
 - `templates/<platform>/<line>/` — 14 个平台×线模板目录 + `templates/common/`，共 96 个模板文件
+- `assets/skills/<name>/references/api-index/<MC 版本>.md` — 平台 API 离线签名索引（18 条线，`javap -public` 从钉选工件生成，每份带 `PROVENANCE` 头与可能出现的 `TRUNCATED` 标记）
 
 ### 3.5 测试 / 脚本 / 文档
 
@@ -234,6 +235,14 @@ preset.js apply
 
 ---
 
+### 5.7 更新 / 新增 API 索引
+
+1. 生成器直接读 `lib/versions.js` 的 `PLATFORM_LINES`——**先改版本线，再重新生成**，不要手写线清单
+2. 全量：`npm run fetch-api-index`（在 PowerShell / cmd 下跑；Git Bash 的 GNU `tar` 会把 `C:\...` 当远程主机）
+3. 单线加深：`node scripts/fetch-mc-api-index.mjs --platform paper --line 1.20.6`
+4. 离线校验：`npm run check-api-index`
+5. 跑 `test/api-index.test.js`：PROVENANCE 字段完整、标题与 `TRUNCATED` 双向一致、单文件 ≤320 KB、语料 ≤3 MB、每个带索引的技能都必须提到 `references/api-index/`
+
 ## 6. 改完怎么让它生效
 
 ### 6.1 三种安装方式
@@ -292,6 +301,8 @@ C:\Users\lenovo\.dsh\.agent-presets\
 13. **26.3 生态不完整**：Paper 已有 `-stable`，NeoForge 只有 `-beta`（`26.3.0.12-beta`）；`docs/STATE.md` 里 17 条线「未验证」。
 14. **fabric loom 锁在 1.17 线**：loom 1.18.2 要求 Gradle JVM 为 Java 25，跨线升级会破。别「顺手升级」。
 15. **fork ≠ 上游**：本地 0.17.0 与 upstream 0.11.0 是两条线（本地加了 smoke / 单工具组件 / STATE / next-steps / preflight；上游走「平台 API 离线签名索引」）。merge 前先看两边 README 功能表。
+16. **索引是生成物，不要手改**：`references/api-index/*.md` 由脚本产出，手改会被 `check-api-index` / `test/api-index.test.js` 抓出来；要改内容请改生成器并重跑。
+17. **生成器要在 PowerShell/cmd 跑**：Git Bash 里的 GNU `tar` 会把 `C:\Users\...` 当成远程主机（报 `Cannot connect to C: resolve failed`）；`--check` 模式不联网、不受影响。
 
 ---
 
@@ -322,6 +333,8 @@ C:\Users\lenovo\.dsh\.agent-presets\
 | 进程执行 / 截断 | `lib/run-process.js:55-112` |
 | 构建锁 | `lib/build-lock.js:8-41` |
 | 移植审计入口 | `lib/port-audit.js:257-340` |
+| API 索引生成器 | `scripts/fetch-mc-api-index.mjs` |
+| API 索引离线校验 | `scripts/fetch-mc-api-index.mjs --check` |
 | 台账 | `docs/STATE.md` |
 
 ---
@@ -337,6 +350,7 @@ C:\Users\lenovo\.dsh\.agent-presets\
 - [ ] 新增的「未验证」条目没有超过棘轮上限（`check:unverified`）
 - [ ] 如果改了 `preset/**`：本地 `.agent-presets` 副本已删 / 或确认走注册路径
 - [ ] 如果改了运行时：`REQUIRE_PLUGIN_DEPS=1 node --test test/modules.test.js` 真加载通过
+- [ ] 如果改了 `references/api-index/**` 或版本线：`npm run check-api-index` + `test/api-index.test.js`
 
 ---
 
