@@ -22,8 +22,8 @@ const SKILLS = join(REPO, 'assets', 'skills')
 
 /** Per-file ceiling from `mc-index-lib.mjs` plus room for the header. */
 const FILE_CAP = 320 * 1024
-/** Whole-corpus ceiling so `npm pack` stays small. */
-const CORPUS_CAP = 1.5 * 1024 * 1024
+/** Whole-corpus ceiling so `npm pack` stays small（18 条钉选线 ≈ 2.6 MB）。 */
+const CORPUS_CAP = 3 * 1024 * 1024
 
 /** Skills that may carry an index, mapped to the platform name in the header. */
 const PLATFORMS = {
